@@ -67,6 +67,8 @@ class Commands(commands.Cog):
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
             result = await mongo.removeproduct(productid)
             await ctx.respond(f'{result}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(f'Internal server error!')
         

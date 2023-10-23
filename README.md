@@ -23,7 +23,5 @@ You can remove your updated products using
 It's only remove one time, so if you have duplicates Product ID, use this command twice
 
 _Note: 
-
 it will still response "Success" even if the Product ID is not exist!
-
 This command can only be used to the registered Discord ID_

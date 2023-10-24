@@ -71,7 +71,46 @@ class Commands(commands.Cog):
             await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(f'Internal server error!')
-        
-    
+
+    @commands.slash_command(
+    name='setprice',
+    description='Set a new price for the product!',
+    )
+    async def setprice(
+        self, 
+        ctx,
+        productid: Option(str, 'Target product ID!', required=True),
+        productprice: Option(int, 'Set a new price for the product!', required=True),
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setprice(productid, productprice)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(f'Internal server error!')
+
+    @commands.slash_command(
+    name='addstock',
+    description='Add stock to the databases!',
+    )
+    async def addstock(
+        self, 
+        ctx,
+        productid: Option(str, 'Target product ID!', required=True),
+        productdetails: Option(str, 'Details of the product!', required=True),
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.addstock(productid, productdetails)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(f'Internal server error!')
+
 def setup(bot):
     bot.add_cog(Commands(bot))

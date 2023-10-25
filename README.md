@@ -51,3 +51,21 @@ ex:
 ```
 _Note_
 _This command can only be used to the registered Discord ID_
+
+__Show Stock__
+To show all stock based on its Product ID you can simply use
+```
+/showstock *productid
+```
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Remove Stock__
+To remove an existing stock in the databases, you can simply use
+```
+/removestock *productid: required, index: int, optional
+```
+If you want to remove all stocks exist in the databases you can just leave _index_ arguments to empty, but by filling _index_ arguments means you want only to delete the stock on specific index
+
+_Note_
+_This command can only be used to the registered Discord ID_

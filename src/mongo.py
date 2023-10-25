@@ -90,6 +90,8 @@ async def addProduct(productName: str, productId: str, productPrice: int):
                 'database': 'User Product',
                 'productlist': [query]
             })
+        elif any(d.get('productId') == productId for d in queryCheck.get('productlist')):
+            return f'Product ID is already exist in databases!'
         else:
             modified = queryCheck
             modified.get('productlist').append(query)
@@ -189,8 +191,45 @@ async def addstock(productId: str, productdetails: str):
             stock.update_one({'productId': productId}, update)
         return 'Stock successfully added to the databases!'
 
-        
+async def showstock(productId: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    stock = db[f'stock']
 
+    data = stock.find_one({'productId': productId})
+    if data is None or len(data.get('stock')) == 0:
+        return f'No stock found in the databases!'
+    else:
+        message = ''
+        for index, stock in enumerate(data.get('stock')):
+            message = message + stock + ' - Index ' + str(index) + '\n'
 
+        return f'{message}'
+
+async def removestock(productId: str, index: int, isAll: bool):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    stock = db[f'stock']
+
+    data = stock.find_one({'productId': productId})
+    if data is None:
+        return f'Nothing to delete!'
+    elif isAll:
+        update = {
+                "$set": {
+                    "stock": []
+                }
+            }
+        stock.update_one({'productId': productId}, update)
+        return f'Success remove all stocks available!'
+    else:
+        data.get('stock').pop(index)
+        modified = data.get('stock')
+        update = {
+                "$set": {
+                    "stock": modified
+                }
+            }
+        stock.update_one({'productId': productId}, update)
+        return f'Success remove stocks on index {index}'
+    
 
     

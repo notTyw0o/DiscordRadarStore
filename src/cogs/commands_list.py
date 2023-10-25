@@ -112,5 +112,48 @@ class Commands(commands.Cog):
         else:
             await ctx.respond(f'Internal server error!')
 
+    @commands.slash_command(
+    name='showstock',
+    description='Add stock to the databases!',
+    )
+    async def showstock(
+        self, 
+        ctx,
+        productid: Option(str, 'Target product ID!', required=True),
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.showstock(productid)
+            await ctx.respond("**Product ID: " + productid + "**" + "\n" + "```\n" + request + "\n```")
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(f'Internal server error!')
+
+    @commands.slash_command(
+    name='removestock',
+    description='Add stock to the databases!',
+    )
+    async def removestock(
+        self, 
+        ctx,
+        productid: Option(str, 'Target product ID!', required=True),
+        index: Option(int, 'Select which index you want to remove!', required=False)
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            if index is None:
+                isAll = True
+            else:
+                isAll = False
+            request = await mongo.removestock(productid, index, isAll)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(f'Internal server error!')
+
 def setup(bot):
     bot.add_cog(Commands(bot))

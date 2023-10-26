@@ -69,3 +69,65 @@ If you want to remove all stocks exist in the databases you can just leave _inde
 
 _Note_
 _This command can only be used to the registered Discord ID_
+
+__Send Product__
+To send product manually to target User ID, you can simply use
+```
+/send *discordid, productid, amount
+```
+The product stock will not deleted if the discord id is invalid.
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Adding Templates Assets__
+You need to add templates first before you can custom all the templates.
+Try to use this command below
+```
+/addassets
+```
+If templates existed already in the databases it will not write dupes.
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Show Templates Assets__
+After you added the template assets, now you can see every assets that are in the databases. Try to use this command below!
+```
+/showassets
+```
+It will send embed containing the assetsid and the value of it!
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Change Templates Assets__
+After you added the template assets, now you can freely change all the assets that are in the databases. Try to use this command below!
+```
+/changeassets *assetsid, value
+```
+The assetsid needs to be valid for this command to work, otherwise it just showing error and show nothing!
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Register Grow ID__
+Register Grow ID is pretty simple, try use this command below!
+```
+/register *growid
+```
+It will not creates Grow ID dupes if it's already registered, and if your Discord ID is already attached to Grow ID, it will change to new one!
+
+_Note_
+_This command can be used to anyone_
+
+__User Information__
+After you registered your Grow ID, now you can check your User Information.
+Try to use this command below!
+```
+/info
+```
+It will show all your details, if something is missing try to contact the Owner!
+
+_Note_
+_This command can be used to anyone_

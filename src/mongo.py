@@ -33,13 +33,13 @@ async def checkOwner(SECRET_KEY: str):
     if len(checkResult) < 1:
         response = {
             'status': 400,
-            'message': 'Your data is not registered, Please contact the owner!'
+            'message': 'Bot is inactive, Please contact the owner!'
         }
         return response
     else:
         response = {
             'status': 200,
-            'message': 'Your data is registered, Bot is ready to use!'
+            'message': 'Bot is active and ready to use!'
         }
         return response
     
@@ -231,5 +231,165 @@ async def removestock(productId: str, index: int, isAll: bool):
         stock.update_one({'productId': productId}, update)
         return f'Success remove stocks on index {index}'
     
+async def takestock(productId: str, amount: int):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    stock = db[f'stock']
 
+    data = stock.find_one({'productId': productId})
+    if data is None:
+        return {'status': 400, 'message': 'Product ID not found!'}
+    elif len(data.get('stock')) == 0:
+        return {'status': 400, 'message': 'There is not available stock for that Product ID'}
+    elif len(data.get('stock')) < amount:
+        return {'status': 400, 'message': 'Insufficient amount of product'}
+    elif len(data.get('stock')) >= amount:
+        message = ''
+        for i in range(amount):
+            message = message + data.get('stock').pop(0) + '\n'
+            print(i)
+        update = {
+                "$set": {
+                    "stock": data.get('stock')
+                }
+            }
+        stock.update_one({'productId': productId}, update)
+        return {'status': 200, 'message': message}
+    else:
+        return {'status': 400, 'message': 'Internal server error!'}
     
+async def register(discordid: str, growid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+
+    data = user.find_one({'discordid': discordid})
+    dupecheck = user.find_one({'growid': growid})
+    if data is None and dupecheck is None:
+        query = {
+            'database': 'User Customer Database',
+            'discordid': discordid,
+            'growid': growid,
+            'worldlock': {'currency': 'wl', 'balance': 0},
+            'rupiah': {'currency': 'rp', 'balance': 0}
+        }
+        user.insert_one(query)
+        return f'Successfully register {growid}!'
+    elif dupecheck is not None:
+        return f'Grow ID is already registered!'
+    else:
+        update = {
+                "$set": {
+                    "growid": growid
+                }
+            }
+        oldgrow = data.get('growid')
+        user.update_one({'discordid': discordid}, update)
+        return f'Successfully set from {oldgrow} to {growid}'
+    
+async def info(discordid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+
+    data = user.find_one({'discordid': discordid})
+    if data is None:
+        return {'status': 400, 'message': 'Youre not registered yet!'}
+    else:
+        return {
+            'status': 200,
+            'message': 'Success fetch data!',
+            'growid': data.get('growid'),
+            'worldlock': data.get('worldlock'),
+            'rupiah': data.get('rupiah')
+        }
+    
+async def addtemplate():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    assets = db[f'assets']
+
+    data = assets.find_one({'database': 'User Assets'})
+    print()
+    if data is None:
+        query = {
+            'database': 'User Assets',
+            'bannerurl': 'https://cdn.discordapp.com/attachments/1166767160878698628/1167104315261980743/standard.gif?ex=654ce998&is=653a7498&hm=a82e5dab07f1cd87999964cee579bec1e1b43c69257336ba15b7d3bdd0852bcb&',
+            'sticker_1': '<a:Siren:1167137117453959270> ',
+            'sticker_2': '<a:arrow4:1167148754772693012>',
+            'sticker_3': '<:money1:1167148958053838949>',
+            'sticker_4': '<:wl:1167146128622506134>',
+            'sticker_5': '<a:darkbluecrown:1167155192773488710>'
+        }
+        assets.insert_one(query)
+        return f'Success added template to databases!'
+    else:
+        return f'Template already exist in databases!'
+    
+async def changeassets(assetsid: str, value: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    assets = db[f'assets']
+
+    data = assets.find_one({'database': 'User Assets'})
+    if data is None:
+        return f'Assets not found!'
+    elif assetsid in ['bannerurl', 'sticker_1', 'sticker_2', 'sticker_3', 'sticker_4', 'sticker_5']:
+        update = {
+                "$set": {
+                    assetsid: value
+                }
+            }
+        assets.update_one({'database': 'User Assets'}, update)
+        return f'Change template success!'
+    else:
+        return f'Assets ID is incorrect!'
+
+async def getassets():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    assets = db[f'assets']
+
+    data = assets.find_one({'database': 'User Assets'})
+    if data is None:
+        return {'status': 400, 'message': 'Assets not found!'}
+    else:
+        return {
+            'status': 200,
+            'assets': {
+                'bannerurl': data.get('bannerurl'),
+                'sticker_1': data.get('sticker_1'),
+                'sticker_2': data.get('sticker_2'),
+                'sticker_3': data.get('sticker_3'),
+                'sticker_4': data.get('sticker_4'),
+                'sticker_5': data.get('sticker_5')
+            }
+        }
+async def showassets():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    assets = db[f'assets']
+
+    data = assets.find_one({'database': 'User Assets'})
+    if data is None:
+        return {'status': 400, 'message': 'Nothing to show!'}
+    else:
+        return {'status': 200, 'assets': [
+            {
+                'code': 'bannerurl',
+                'value': data.get('bannerurl')
+            },
+            {
+                'code': 'sticker_1',
+                'value': data.get('sticker_1')
+            },
+            {
+                'code': 'sticker_2',
+                'value': data.get('sticker_2')
+            },
+            {
+                'code': 'sticker_3',
+                'value': data.get('sticker_3')
+            },
+            {
+                'code': 'sticker_4',
+                'value': data.get('sticker_4')
+            },
+            {
+                'code': 'sticker_5',
+                'value': data.get('sticker_5')
+            },
+        ]}

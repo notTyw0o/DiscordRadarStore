@@ -3,18 +3,11 @@ from discord.commands import Option
 import mongo
 import util_function
 import client_data
+import discordembed
 
 class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @commands.slash_command(
-        name='add',
-        description='Add two numbers',
-    )
-    async def add(self, ctx, first: Option(int, 'The first number', required=True), second: Option(int, 'The second number', required=True)):
-        result = first + second
-        await ctx.respond(f'The sum of {first} and {second} is {result}')
 
     @commands.slash_command(
         description='Check if bot is ready to use!',
@@ -22,14 +15,14 @@ class Commands(commands.Cog):
     async def check(self, ctx):
         request = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
-        if request.get('status') != 0 and isAuthor.get('status') == 200:
+        if request.get('status') == 200 and isAuthor.get('status') == 200:
             msg = request.get('message')
             await ctx.respond(f'{msg}')
-        elif isAuthor.get('status') != 200:
+        elif isAuthor.get('status') == 400:
             msg = isAuthor.get('message')
             await ctx.respond(f'{msg}')
-        else:
-            await ctx.respond(f'Internal server error!')
+        elif request.get('status') == 400:
+            await ctx.respond(request.get('message'))
 
     @commands.slash_command(
         name='addproduct',
@@ -48,7 +41,7 @@ class Commands(commands.Cog):
             productRequest = await mongo.addProduct(productname, productid, productprice)
             await ctx.respond(f'{productRequest}')
         elif request.get('status') != 200:
-            await ctx.respond(f'Bot is not active!')
+            await ctx.respond(request.get('message'))
         elif isAuthor.get('status') != 200:
             msg = isAuthor.get('message')
             await ctx.respond(f'{msg}')
@@ -70,7 +63,70 @@ class Commands(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
-            await ctx.respond(f'Internal server error!')
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='addassets',
+    description='Add template assets to databases!',
+    )
+    async def addassets(
+        self, 
+        ctx, 
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            result = await mongo.addtemplate()
+            await ctx.respond(f'{result}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='changeassets',
+    description='Change template assets in databases!',
+    )
+    async def changeassets(
+        self, 
+        ctx,
+        assetsid: Option(str, 'Target assets ID!', required=True),
+        value: Option(str, 'Value of assets ID!', required=True),
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            result = await mongo.changeassets(assetsid, value)
+            await ctx.respond(f'{result}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='showassets',
+    description='Show template assets in databases!',
+    )
+    async def showassets(
+        self, 
+        ctx,
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        result = await mongo.showassets()
+        template = await mongo.getassets();
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200 and result.get('status') == 200:
+            try:
+                footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+            except:
+                footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+            await ctx.respond(embed= await discordembed.showembed(result.get('assets'), template.get('assets'), footer))
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        elif result.get('status') == 400:
+            await ctx.respond(result.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
     name='setprice',
@@ -90,7 +146,7 @@ class Commands(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
-            await ctx.respond(f'Internal server error!')
+            await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
     name='addstock',
@@ -110,11 +166,11 @@ class Commands(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
-            await ctx.respond(f'Internal server error!')
+            await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
     name='showstock',
-    description='Add stock to the databases!',
+    description='Show stock from the databases!',
     )
     async def showstock(
         self, 
@@ -129,11 +185,11 @@ class Commands(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
-            await ctx.respond(f'Internal server error!')
+            await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
     name='removestock',
-    description='Add stock to the databases!',
+    description='Remove stock from the databases!',
     )
     async def removestock(
         self, 
@@ -153,7 +209,83 @@ class Commands(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
-            await ctx.respond(f'Internal server error!')
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='send',
+    description='Send product to user!',
+    )
+    async def send(
+        self, 
+        ctx,
+        discordid: Option(str, 'Discord ID of the target!', required=True),
+        productid: Option(str, 'Target product ID!', required=True),
+        amount: Option(int, 'How many product u want to send!', required=True)
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            try:
+                user = ctx.guild.get_member(int(discordid))
+            except:
+                user = 'error'
+            if user == 'error' or user is None:
+                await ctx.respond(f'User not found!')
+            else:
+                request = await mongo.takestock(productid, amount)
+                if request.get('status') == 200:
+                    await user.send(request.get('message'))
+                    await ctx.respond('Check DM' + "'" + 's!')
+                else:
+                    await ctx.respond(request.get('message'))
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='register',
+    description='Register new user!',
+    )
+    async def register(
+        self, 
+        ctx,
+        growid: Option(str, 'Discord ID of the target!', required=True),
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            userid = str(ctx.author.id)
+            request = await mongo.register(userid, growid)
+            await ctx.respond(request)
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='info',
+    description='Get user info!',
+    )
+    async def info(
+        self, 
+        ctx,
+        ):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            userid = str(ctx.author.id)
+            request = await mongo.info(userid)
+            template = await mongo.getassets();
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+                except:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.infoembed(request, template.get('assets'), footer)
+                await ctx.respond(embed=embed)
+            elif request.get('status') == 400:
+                await ctx.respond(request.get('message'))
+            elif template.get('status') == 400:
+                await ctx.respond(template.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
 
 def setup(bot):
     bot.add_cog(Commands(bot))

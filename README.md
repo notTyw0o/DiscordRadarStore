@@ -111,23 +111,22 @@ The assetsid needs to be valid for this command to work, otherwise it just showi
 _Note_
 _This command can only be used to the registered Discord ID_
 
-__Register Grow ID__
-Register Grow ID is pretty simple, try use this command below!
+__Give amount of balance__
+To give certain amount of balance try to use this command below!
 ```
-/register *growid
+/give *discordid, type: 'worldlock' or 'rupiah', amount
 ```
-It will not creates Grow ID dupes if it's already registered, and if your Discord ID is already attached to Grow ID, it will change to new one!
+If you want to remove balance just add "-" in the amount, ex: -100
 
 _Note_
-_This command can be used to anyone_
+_This command can only be used to the registered Discord ID_
 
-__User Information__
-After you registered your Grow ID, now you can check your User Information.
-Try to use this command below!
+__Deploy Menu__
+You need to deploy menu for your customer can use this bot commnads, try to use
 ```
-/info
+/deploy
 ```
-It will show all your details, if something is missing try to contact the Owner!
+It will deploy commands menu, so your customer do not need to create ticket to order things!
 
 _Note_
-_This command can be used to anyone_
+_This command can only be used to the registered Discord ID_

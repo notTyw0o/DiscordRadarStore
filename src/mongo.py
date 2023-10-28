@@ -261,6 +261,8 @@ async def register(discordid: str, growid: str):
     db = client[f'user_{client_data.SECRET_KEY}']
     user = db[f'growid']
 
+    discordid = str(discordid)
+
     data = user.find_one({'discordid': discordid})
     dupecheck = user.find_one({'growid': growid})
     if data is None and dupecheck is None:
@@ -393,3 +395,29 @@ async def showassets():
                 'value': data.get('sticker_5')
             },
         ]}
+    
+async def give(discordid: str, type: str, amount: int):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+
+    discordid = str(discordid)
+
+    data =  user.find_one({'discordid': discordid})
+    if data is None:
+        return f'User not registered!'
+    else:
+        if type not in ['worldlock', 'rupiah']:
+            return f'Type value must be "worldlock" or "rupiah"!'
+        else:
+            data[type]['balance'] = data[type]['balance'] + amount
+            update = {
+                "$set": {
+                    type: data[type]
+                }
+            }
+            user.update_one({'discordid': discordid}, update)
+            if '-' in str(amount):
+                return f'Success remove {str(amount).replace("-", "")} {type} from <@{discordid}>'
+            else:
+                return f'Success add {amount} {type} to <@{discordid}>'
+

@@ -4,6 +4,7 @@ import mongo
 import util_function
 import client_data
 import discordembed
+import discord_menu as menu
 
 class Commands(commands.Cog):
     def __init__(self, bot):
@@ -244,48 +245,35 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
-    name='register',
-    description='Register new user!',
+    name='deploy',
+    description='Deploy user command!',
     )
-    async def register(
-        self, 
-        ctx,
-        growid: Option(str, 'Discord ID of the target!', required=True),
-        ):
+    async def deploy(self, ctx):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
-        if isOwner.get('status') == 200:
-            userid = str(ctx.author.id)
-            request = await mongo.register(userid, growid)
-            await ctx.respond(request)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            await ctx.respond('Success!', ephemeral=True)
+            await ctx.send("User Command!", view=menu.MainView(timeout=None))
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
-    name='info',
-    description='Get user info!',
+    name='give',
+    description='Give balance to user ID!',
     )
-    async def info(
-        self, 
-        ctx,
-        ):
+    async def give(self, ctx, discordid: Option(str, 'Discord ID of the target!', required=True), type: Option(str, '"worldlock" or "rupiah"!', required=True), amount: Option(int, 'Amount balance!', required=True)):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
-        if isOwner.get('status') == 200:
-            userid = str(ctx.author.id)
-            request = await mongo.info(userid)
-            template = await mongo.getassets();
-            if request.get('status') == 200 and template.get('status') == 200:
-                try:
-                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
-                except:
-                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                embed = await discordembed.infoembed(request, template.get('assets'), footer)
-                await ctx.respond(embed=embed)
-            elif request.get('status') == 400:
-                await ctx.respond(request.get('message'))
-            elif template.get('status') == 400:
-                await ctx.respond(template.get('message'))
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.give(discordid, type, amount)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(isOwner.get('message'))
+        
 
 def setup(bot):
     bot.add_cog(Commands(bot))

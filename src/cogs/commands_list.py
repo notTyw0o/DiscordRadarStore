@@ -273,6 +273,21 @@ class Commands(commands.Cog):
             await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setwebhook',
+    description='Give balance to user ID!',
+    )
+    async def setwebhook(self, ctx, webhookurl: Option(str, 'Discord Webhook URL!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setwebhook(webhookurl)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
         
 
 def setup(bot):

@@ -420,4 +420,24 @@ async def give(discordid: str, type: str, amount: int):
                 return f'Success remove {str(amount).replace("-", "")} {type} from <@{discordid}>'
             else:
                 return f'Success add {amount} {type} to <@{discordid}>'
+            
+async def setwebhook(webhookurl: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    webhook = db[f'webhook']
 
+    data = webhook.find_one({'database': 'User Webhook'})
+    if data is None:
+        query = {
+            'database': 'User Webhook',
+            'webhookurl': webhookurl
+        }
+        webhook.insert_one(query)
+        return f'Success set webhook to databases!'
+    else:
+        update = {
+                "$set": {
+                    'webhookurl': webhookurl
+                }
+            }
+        webhook.update_one({'database': 'User Webhook'}, update)
+        return f'Success set new webhook to databases!'

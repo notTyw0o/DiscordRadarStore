@@ -246,7 +246,6 @@ async def takestock(productId: str, amount: int):
         message = ''
         for i in range(amount):
             message = message + data.get('stock').pop(0) + '\n'
-            print(i)
         update = {
                 "$set": {
                     "stock": data.get('stock')
@@ -441,3 +440,124 @@ async def setwebhook(webhookurl: str):
             }
         webhook.update_one({'database': 'User Webhook'}, update)
         return f'Success set new webhook to databases!'
+    
+async def setdeposit(world: str, owner: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    deposit = db[f'deposit']
+
+    data = deposit.find_one({'database': 'User Deposit'})
+    if data is None:
+        query = {
+            'database': 'User Deposit',
+            'world': world,
+            'owner': owner
+        }
+        deposit.insert_one(query)
+        return f'Success set deposit info to databases!'
+    else:
+        update = {
+                "$set": {
+                    'world': world,
+                    'owner': owner
+                }
+            }
+        deposit.update_one({'database': 'User Deposit'}, update)
+        return f'Success set new deposit info to databases!'
+    
+async def getdeposit():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    deposit = db[f'deposit']
+
+    data = deposit.find_one({'database': 'User Deposit'})
+    if data is None:
+        return {'status': 400, 'message': 'Deposit info is not found!'}
+    else:
+        return {'status': 200, 'data': data}
+
+async def checktotalstock(productid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    stock = db[f'stock']
+
+    data = stock.find_one({'productId': productid})
+    totalstock = 0
+    if data is None:
+        pass
+    else:
+        totalstock = int(len(data.get('stock')))
+    return totalstock
+        
+
+async def checkstock():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    product = db[f'product']
+
+    productdata = product.find_one({'database': 'User Product'})
+    if productdata is None:
+        return {'status': 400, 'message': 'Product is not found!'}
+    else:
+        array = productdata.get('productlist')
+        for index, data in enumerate(array):
+            stock = await checktotalstock(data['productId'])
+            data['totalstock'] = stock
+        return {'status': 200, 'data': array}
+    
+async def isOrder(productid: str, amount: int):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    product = db[f'product']
+
+    productdata = product.find_one({'database': 'User Product'})
+    stockcheck = await checktotalstock(productid)
+    if productdata is None:
+        return {'status': 400, 'message': 'Product not been set!'}
+    elif productdata is not None and stockcheck >= amount:
+        array = productdata.get('productlist')
+        count = 0
+        price = 0
+        
+        for data in array:
+            if data['productId'] == productid:
+                count = count + 1
+                object = data
+                break
+            else:
+                pass
+        if count == 0:
+            return {'status': 400, 'message': 'Product code is invalid'}
+        else:
+            return {'status': 200, 'message': 'Processing order..\n Bot will sent product via Direct Messages!', 'productdata': object}
+    else:
+        return {'status': 400, 'message': 'Insufficient Stock!'}
+        
+async def setorderstate(state: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    states = db[f'states']
+
+    data = states.find_one({'database': 'User State'})
+    if data is None:
+        query = {
+            'database': 'User State',
+            'state': state
+        }
+        states.insert_one(query)
+        return f'Success create new state DB!'
+    else:
+        update = {
+            "$set": {
+                'state': state,
+            }
+        }
+        states.update_one({'database': 'User State'}, update)
+        return f'Success change state!'
+    
+async def checkstate():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    states = db[f'states']
+
+    data = states.find_one({'database': 'User State'})
+    if data is None:
+        return {'status': 400, 'message': 'State not found, please set it first!'}
+    else:
+        if data['state'] == "False":
+            return {'status': 200, 'state': data['state']}
+        else:
+            return {'status': 400, 'message': 'Bot is still processing order, please wait for a moment!'}

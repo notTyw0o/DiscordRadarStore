@@ -276,7 +276,7 @@ class Commands(commands.Cog):
 
     @commands.slash_command(
     name='setwebhook',
-    description='Give balance to user ID!',
+    description='Set webhook url!',
     )
     async def setwebhook(self, ctx, webhookurl: Option(str, 'Discord Webhook URL!', required=True)):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
@@ -284,6 +284,39 @@ class Commands(commands.Cog):
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
             request = await mongo.setwebhook(webhookurl)
             await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setdeposit',
+    description='Set deposit info!',
+    )
+    async def setdeposit(self, ctx, world: Option(str, 'Input deposit world!', required=True), owner: Option(str, 'The owner of the world!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setdeposit(world, owner)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setorderstate',
+    description='Set deposit info!',
+    )
+    async def setorderstate(self, ctx, state: Option(str, 'True or False', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            if state in ['True', 'False']:
+                request = await mongo.setorderstate(state)
+                await ctx.respond(f'{request}')
+            else:
+                await ctx.respond(f'Wrong state typing!')
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:

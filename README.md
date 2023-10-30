@@ -130,3 +130,12 @@ It will deploy commands menu, so your customer do not need to create ticket to o
 
 _Note_
 _This command can only be used to the registered Discord ID_
+
+__Set Deposit__
+You can set your deposit information by using
+```
+/setdeposit *world, owner
+```
+
+_Note_
+_This command can only be used to the registered Discord ID_

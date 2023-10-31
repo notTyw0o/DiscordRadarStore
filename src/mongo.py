@@ -1,9 +1,12 @@
-
+from dotenv import load_dotenv
+load_dotenv()
+import os
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import client_data
+import util_function
 
-uri = f'mongodb+srv://{client_data.MONGO_USER}:{client_data.MONGO_PASSWORD}@discordbotdatabase.bpx5wpk.mongodb.net/?retryWrites=true&w=majority'
+uri = f'mongodb+srv://{os.getenv("MONGO_USER")}:{os.getenv("MONGO_PASSWORD")}@discordbotdatabase.bpx5wpk.mongodb.net/?retryWrites=true&w=majority'
 
 # Create a new client and connect to the server
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -19,29 +22,12 @@ async def checkOwner(SECRET_KEY: str):
     db = client["user"]
     collection = db["data"]
 
-    CHECK = list(collection.find({
-        "database": "User Data"
-    }))
-
-    RESULTS = CHECK[0].get('user_data')
-
-    checkResult = []
-    for i in RESULTS:
-        if SECRET_KEY == i.get('secretkey'):
-            checkResult.append(i)
-            
-    if len(checkResult) < 1:
-        response = {
-            'status': 400,
-            'message': 'Bot is inactive, Please contact the owner!'
-        }
-        return response
-    else:
-        response = {
-            'status': 200,
-            'message': 'Bot is active and ready to use!'
-        }
-        return response
+    data = collection.find_one({'secretkey': SECRET_KEY})
+    if data is None:
+        return {'status': 400, 'message': 'Key not found!'}
+    elif data['expdate'] == '' or data['status'] == False or util_function.expired(data['expdate']):
+        return {'status': 400, 'message': 'Bot is inactive!'}
+    else: return {'status': 200, 'message': 'Bot is active and ready to use!'}
     
 async def getPresence(SECRET_KEY: str):
     db = client["user"]
@@ -72,7 +58,17 @@ async def getPresence(SECRET_KEY: str):
         }
         return response
     
-async def addProduct(productName: str, productId: str, productPrice: int):
+def getbotinfo():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    data = db[f'data']
+
+    bot = data.find_one({'discordtoken': client_data.TOKEN})
+    if bot is None:
+        raise ValueError('Bot is not in the databases!')
+    else:
+        {'status': 200, 'data': bot}
+
+async def addProduct(productName: str, productId: str, productPrice: int, roleid):
     db = client[f'user_{client_data.SECRET_KEY}']
     collection = db[f'product']
 
@@ -80,6 +76,7 @@ async def addProduct(productName: str, productId: str, productPrice: int):
         'productName': productName,
         'productId': productId,
         'productPrice': productPrice,
+        'roleId': roleid
     }
     try:
         queryCheck = collection.find_one({

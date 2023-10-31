@@ -34,12 +34,13 @@ class Commands(commands.Cog):
         ctx, 
         productname: Option(str, 'Name of the product!', required=True),
         productid: Option(str, 'ID of the product!', required=True),
-        productprice: Option(int, 'Set price of the product!', required=True)
+        productprice: Option(int, 'Set price of the product!', required=True),
+        roleid: Option(str, 'Set price of the product!', required=True)
         ):
         request = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if request.get('status') == 200 and isAuthor.get('status') == 200:
-            productRequest = await mongo.addProduct(productname, productid, productprice)
+            productRequest = await mongo.addProduct(productname, productid, productprice, roleid)
             await ctx.respond(f'{productRequest}')
         elif request.get('status') != 200:
             await ctx.respond(request.get('message'))

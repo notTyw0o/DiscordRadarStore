@@ -27,10 +27,14 @@ class Order(discord.ui.Modal):
         isState = await mongo.checkstate()
         userBalance = await mongo.info(str(interaction.user.id))
 
-        userBalance = userBalance['worldlock']['balance']
-        totalprice = int(self.children[1].value) * int(isOrder['productdata']['productPrice'])
-        isOrder['productdata']['amount'] = int(self.children[1].value)
-        isOrder['productdata']['totalprice'] = totalprice
+        try:
+            userBalance = userBalance['worldlock']['balance']
+            totalprice = int(self.children[1].value) * int(isOrder['productdata']['productPrice'])
+            isOrder['productdata']['amount'] = int(self.children[1].value)
+            isOrder['productdata']['totalprice'] = totalprice
+        except:
+            await interaction.response.send_message('Insufficient stock!', ephemeral=True)
+            return
 
         if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:
             await mongo.setorderstate('True')
@@ -41,6 +45,7 @@ class Order(discord.ui.Modal):
                     await mongo.setorderstate('False')
                     assets = await mongo.getassets()
                     user = interaction.user
+                    guild = interaction.guild
                     try:
                         footer = {'name': interaction.user.name,'time': await util_function.timenow(), 'avatar': interaction.user.avatar.url}
                     except:
@@ -48,7 +53,13 @@ class Order(discord.ui.Modal):
                     embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer)
                     await user.send(f"```{request['message']}```")
                     await user.send(embed=embed)
-                    await interaction.response.send_message("Check your direct messages!", ephemeral=True)
+                    try:
+                        role = discord.utils.get(guild.roles, id=int(isOrder['productdata']['roleId']))
+                        member = guild.get_member(user.id)
+                        await member.add_roles(role)
+                        await interaction.response.send_message("Success add new role\nCheck your direct messages!", ephemeral=True)
+                    except Exception as e:
+                        await interaction.response.send_message("Check your direct messages!", ephemeral=True)
                 else:
                     await mongo.setorderstate('False')
                     await interaction.response.send_message(removebalance, ephemeral=True)
@@ -60,5 +71,7 @@ class Order(discord.ui.Modal):
         elif isState['status'] == 400:
             await interaction.response.send_message(isState['message'], ephemeral=True)
         elif userBalance < totalprice:
-            await interaction.response.send_message('Insufficient Balance!', ephemeral=True)
+            await interaction.response.send_message(f'Insufficient balance!', ephemeral=True)
+
+            
 

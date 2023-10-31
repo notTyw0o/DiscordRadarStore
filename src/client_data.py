@@ -1,14 +1,29 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-import hashlib
+import requests
+import sys
 
-SECRET = os.getenv("OWNER_ID") + os.getenv("OWNER_PASSWORD")
-hash_object = hashlib.md5()
-hash_object.update(SECRET.encode('utf-8'))
+url = os.getenv("BASE_URL") + '/data'
 
-SECRET_KEY = hash_object.hexdigest()
-TOKEN = os.getenv("DISCORD_TOKEN")
-OWNER_ID = os.getenv("OWNER_ID")
-MONGO_USER = os.getenv("MONGO_USER")
-MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+# JSON data to be sent in the POST request
+data = {
+    'secretkey': os.getenv('SECRET_KEY')
+}
+
+response = requests.post(url, json=data)
+
+# Check the response status
+try:
+    data = response.json()
+    SECRET_KEY = data['data']['secretkey']
+    TOKEN = data['data']['discordtoken']
+    OWNER_ID = data['data']['discordid']
+    PRESENCE = data['data']['presence']
+except:
+    print(data['message'])
+    sys.exit(1)
+    
+
+
+

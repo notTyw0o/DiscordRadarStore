@@ -12,9 +12,7 @@ bot.load_extension('cogs.commands_list')
 
 @bot.event
 async def on_ready():
-    presence = await mongo.getPresence(client_data.SECRET_KEY)
-    presence = presence.get('message')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=presence))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=client_data.PRESENCE))
     print(f'Logged in as {bot.user.name}')
 
 def startBot():

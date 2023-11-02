@@ -139,3 +139,33 @@ You can set your deposit information by using
 
 _Note_
 _This command can only be used to the registered Discord ID_
+
+__Set Webhook__
+You can set your webhook link by using this command below
+```
+/setwebhook *webhooklink
+```
+It will set webhook link that will sent donation logs after user donate in Growtopia
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Set Presence__
+You can set your presence by using this command below
+```
+/setpresence *yournewpresence
+```
+It will set new presence to your bot, but you need to restart the bot to apply your new presence
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Set Order State__
+You can set your order state by using this command below
+```
+/setpresence *yournewpresence
+```
+It will set new order state to your bot, if the state is True, the bot will not process any incoming orders.
+
+_Note_
+_This command can only be used to the registered Discord ID_

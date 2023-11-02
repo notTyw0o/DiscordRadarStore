@@ -22,11 +22,17 @@ async def timenow():
     return current_time.strftime("%Y/%m/%d at %I:%M %p")
 
 def rupiah_format(angka, with_prefix=False, desimal=2):
-    locale.setlocale(locale.LC_NUMERIC, 'IND')
-    rupiah = locale.format("%.*f", (desimal, angka), True)
-    if with_prefix:
-        return "Rp. {}".format(rupiah)
-    return rupiah
+    try:
+        # Change the locale setting to a supported one (for example, 'en_US.UTF-8')
+        locale.setlocale(locale.LC_NUMERIC, 'en_US.UTF-8')
+
+        rupiah = locale.format("%.*f", (desimal, angka), True)
+        if with_prefix:
+            return "Rp. {}".format(rupiah)
+        return rupiah
+    except locale.Error as e:
+        print(f"Error occurred: {e}")
+        return "Error: Unsupported locale setting"
 
 def expired(date_string):
     # Convert the given date string to a datetime object

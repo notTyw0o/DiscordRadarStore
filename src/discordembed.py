@@ -1,5 +1,6 @@
 import discord
 import util_function
+import mongo
 
 async def infoembed(field, assets, footer):
     siren = assets.get('sticker_1')
@@ -89,6 +90,27 @@ async def orderembed(product, assets, footer):
     embed.add_field(
         name=f"{siren} **Order Success** {siren}",
         value=f"{crown} **{product['productName']}** \n{arrow} Amount: {product['amount']}\n{arrow} Total price: {product['totalprice']}", inline=True
+        )
+    embed.set_image(url=assets.get('bannerurl'))
+    embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
+    return embed
+
+async def deploy(footer):
+    assets = await mongo.getassets()
+    assets = assets['assets']
+    siren = assets.get('sticker_1')
+    arrow = assets.get('sticker_2')
+    money = assets.get('sticker_3')
+    worldlock = assets.get('sticker_4')
+    crown = assets.get('sticker_5')
+    embed = discord.Embed(
+        title="",
+        description="",
+        color=0x0e0808
+    )
+    embed.add_field(
+        name=f"{siren} **User Command** {siren}",
+        value=f""
         )
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))

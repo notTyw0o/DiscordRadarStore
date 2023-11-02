@@ -8,7 +8,7 @@ url = os.getenv("BASE_URL") + '/data'
 
 # JSON data to be sent in the POST request
 data = {
-    'secretkey': os.getenv('SECRET_KEY')
+    'secretkey': sys.argv[1]
 }
 
 response = requests.post(url, json=data)

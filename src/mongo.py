@@ -558,3 +558,19 @@ async def checkstate():
             return {'status': 200, 'state': data['state']}
         else:
             return {'status': 400, 'message': 'Bot is still processing order, please wait for a moment!'}
+        
+async def setpresence(presence: str):
+    db = client[f'user']
+    selectpresence = db[f'data']
+
+    data = selectpresence.find_one({'discordtoken': client_data.TOKEN})
+    if data is None:
+        return f'Data not found!'
+    else:
+        update = {
+            "$set": {
+                'presence': presence,
+            }
+        }
+        selectpresence.update_one({'discordtoken': client_data.TOKEN}, update)
+        return f'Success change presence, please restart your bot to apply!'

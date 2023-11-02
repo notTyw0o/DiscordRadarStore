@@ -253,8 +253,13 @@ class Commands(commands.Cog):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            try:
+                footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+            except:
+                footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+            embed = await discordembed.deploy(footer)
             await ctx.respond('Success!', ephemeral=True)
-            await ctx.send("User Command!", view=menu.MainView(timeout=None))
+            await ctx.send(embed=embed, view=menu.MainView(timeout=None))
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
@@ -318,6 +323,21 @@ class Commands(commands.Cog):
                 await ctx.respond(f'{request}')
             else:
                 await ctx.respond(f'Wrong state typing!')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setpresence',
+    description='Set deposit info!',
+    )
+    async def setpresence(self, ctx, presence: Option(str, 'Your new presence!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setpresence(presence)
+            await ctx.respond(request)
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:

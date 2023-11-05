@@ -574,3 +574,49 @@ async def setpresence(presence: str):
         }
         selectpresence.update_one({'discordtoken': client_data.TOKEN}, update)
         return f'Success change presence, please restart your bot to apply!'
+    
+async def addstockbulk(productId: str, productdetails: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    product = db[f'product']
+    stock = db[f'stock']
+
+    query = product.find_one({'database': 'User Product'})
+    productCheck = 0 #if 0 then its False
+    for data in query.get('productlist'):
+        if data.get('productId') == productId:
+            productCheck = productCheck + 1
+            break
+    
+    if query is None:
+        return 'Database not found!'
+    elif productCheck == 0:
+        return 'Product not existed in the databases!'
+    else:
+
+        sets_of_data = productdetails.split(',')
+        array = []
+        for data_set in sets_of_data:
+            dictionary = {data_set}
+            
+            array.append(dictionary)
+
+        stockQuery = stock.find_one({'productId': productId})
+        if stockQuery is None:
+            stockdata = {
+                'database': 'User Stock',
+                'productId': productId,
+                'stock': sets_of_data
+            }
+            stock.insert_one(stockdata)
+        else:
+            stockArray = stockQuery.get('stock')
+            stockArray.extend(sets_of_data)
+            update = {
+                "$set": {
+                    "stock": stockArray
+                }
+            }
+            stock.update_one({'productId': productId}, update)
+        return 'Stock successfully added to the databases!'
+
+    

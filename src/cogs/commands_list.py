@@ -174,7 +174,7 @@ class Commands(commands.Cog):
     name='addstockbulk',
     description='Add stock to the databases!',
     )
-    async def addstock(
+    async def addstockbulk(
         self, 
         ctx,
         productid: Option(str, 'Target product ID!', required=True),

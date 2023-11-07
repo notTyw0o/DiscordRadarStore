@@ -3,6 +3,7 @@ import mongo
 import discordembed
 import util_function
 
+bot = discord.Bot()
 
 class Register(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
@@ -15,8 +16,9 @@ class Register(discord.ui.Modal):
         await interaction.response.send_message(request, ephemeral=True)
 
 class Order(discord.ui.Modal):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, bot, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.bot = bot
         
 
         self.add_item(discord.ui.InputText(label="Product Code"))
@@ -53,6 +55,14 @@ class Order(discord.ui.Modal):
                     embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer)
                     await user.send(f"```{request['message']}```")
                     await user.send(embed=embed)
+                    userlogs = {
+                        'discordid': str(interaction.user.id), 
+                        'productname': isOrder['productdata']['productName'],
+                        'amount': str(isOrder['productdata']['amount']),
+                        'totalprice': str(isOrder['productdata']['totalprice']),
+                        'product': request['message']
+                        }
+                    await mongo.addlogs(userlogs)
                     try:
                         role = discord.utils.get(guild.roles, id=int(isOrder['productdata']['roleId']))
                         member = guild.get_member(user.id)
@@ -60,6 +70,12 @@ class Order(discord.ui.Modal):
                         await interaction.response.send_message("Success add new role\nCheck your direct messages!", ephemeral=True)
                     except Exception as e:
                         await interaction.response.send_message("Check your direct messages!", ephemeral=True)
+                    channelid = await mongo.getchannelhistory()
+                    if channelid['status'] == 200:
+                        channel = guild.get_channel(int(channelid['data']))
+                        await channel.send(embed=embed)
+                    else:
+                        pass
                 else:
                     await mongo.setorderstate('False')
                     await interaction.response.send_message(removebalance, ephemeral=True)

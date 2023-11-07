@@ -6,7 +6,7 @@ import discordembed
 import discord_button
 import util_function
 
-bot = discord.Bot()
+bot = discord.Bot(intents=discord.Intents.all())
 
 
 class MainView(discord.ui.View):
@@ -15,6 +15,10 @@ class MainView(discord.ui.View):
         min_values = 1,
         max_values = 1,
         options = [
+            discord.SelectOption(
+                label="None",
+                description="None"
+            ),
             discord.SelectOption(
                 label="Register Grow ID",
                 description="Register your Grow ID!"
@@ -28,6 +32,10 @@ class MainView(discord.ui.View):
                 description="Get deposit information!"
             ),
             discord.SelectOption(
+                label="Order Product",
+                description="Order an product!"
+            ),
+            discord.SelectOption(
                 label="Check Stock",
                 description="Check available stock on store!"
             )
@@ -37,7 +45,9 @@ class MainView(discord.ui.View):
         isActive = await mongo.checkOwner(client_data.SECRET_KEY)
         selectedvalues = select.values[0]
         if isActive['status'] == 200:
-            if selectedvalues == "Register Grow ID":
+            if selectedvalues == "None":
+                await interaction.response.send_message('Nothing!', ephemeral=True)
+            elif selectedvalues == "Register Grow ID":
                 await interaction.response.send_modal(modal.Register(title=select.values[0]))
             elif selectedvalues == "User Information":
                 userid = str(interaction.user.id)
@@ -68,6 +78,8 @@ class MainView(discord.ui.View):
                     await interaction.response.send_message(request.get('message'), ephemeral=True)
                 elif template.get('status') == 400:
                     await interaction.response.send_message(template.get('message'), ephemeral=True)
+            elif selectedvalues == "Order Product":
+                await interaction.response.send_modal(modal.Order(bot, title=select.values[0]))
             elif selectedvalues == "Check Stock":
                 request = await mongo.checkstock()
                 template = await mongo.getassets()

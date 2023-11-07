@@ -1,4 +1,4 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.commands import Option
 import mongo
 import util_function
@@ -9,6 +9,8 @@ import discord_menu as menu
 class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.ctx = None
+        self.last_message = None
 
     @commands.slash_command(
         description='Check if bot is ready to use!',
@@ -358,6 +360,111 @@ class Commands(commands.Cog):
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
             request = await mongo.setpresence(presence)
             await ctx.respond(request)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setchannelhistory',
+    description='Set channel history info!',
+    )
+    async def setchannelhistory(self, ctx, channelid: Option(str, 'Your new presence!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setchannelhistory(channelid)
+            await ctx.respond(request)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @tasks.loop(seconds=5.0)
+    async def runlivestock(self, ctx):
+        if self.last_message:  # If there's a previous message
+            request = await mongo.checkstock()
+            template = await mongo.getassets()
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+                except:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
+                await self.last_message.delete()  # Delete the previous message
+                self.last_message = await ctx.send(embed=embed)
+        else:
+            request = await mongo.checkstock()
+            template = await mongo.getassets()
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+                except:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
+                self.last_message = await ctx.send(embed=embed)
+
+    @commands.slash_command(
+    name='startlivestock',
+    description='Start livestock info!',
+    )
+    async def startlivestock(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            self.ctx = ctx
+            self.runlivestock.start(ctx)
+            await ctx.respond('Livestock deployed!', ephemeral=True)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='stoplivestock',
+    description='Stop livestock info!',
+    )
+    async def stoplivestock(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            self.runlivestock.cancel()
+            await ctx.respond('Livestock stopped!', ephemeral=True)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='showlogs',
+    description='Show logs info!',
+    )
+    async def showlogs(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.showlogs()
+            message = ''
+            for data in request['data']:
+                product = data['product'].rstrip('\n')
+                message += f"===============================\nDiscord ID: {data['discordid']}\nProduct Name: {data['productname']}\nAmount: {data['amount']}\nTotal Price: {data['totalprice']}\nProduct: \n{product}" + '\n'
+            message += f"==============================="
+            await ctx.respond(f"```{message}```", ephemeral=True)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='deletelogs',
+    description='Delete logs info!',
+    )
+    async def deletelogs(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.deletelogs()
+            await ctx.respond(request['message'], ephemeral=True)
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:

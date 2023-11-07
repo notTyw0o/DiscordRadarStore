@@ -619,4 +619,82 @@ async def addstockbulk(productId: str, productdetails: str):
             stock.update_one({'productId': productId}, update)
         return 'Stock successfully added to the databases!'
 
+async def setchannelhistory(channelid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    channel = db[f'channelhistory']
+
+    data = channel.find_one({'database': 'User Channel History'})
+    if data is None:
+        query = {
+            'database': 'User Channel History',
+            'channelid': channelid
+        }
+        channel.insert_one(query)
+        return f'Success set channel history to databases!'
+    else:
+        update = {
+            "$set": {
+                'channelid': channelid,
+            }
+        }
+        channel.update_one({'database': 'User Channel History'}, update)
+        return f'Success change channel history!'
     
+async def getchannelhistory():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    channel = db[f'channelhistory']
+
+    data = channel.find_one({'database': 'User Channel History'})
+    if data is None:
+        return {'status': 400, 'message': 'Channel history not found!'}
+    else:
+        return {'status': 200, 'data': data['channelid']}
+    
+async def addlogs(logged):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    logs = db[f'logs']
+
+    data = logs.find_one({'database': 'User Logs'})
+    if data is None:
+        query = {
+            'database': 'User Logs',
+            'logs': [logged]
+        }
+        logs.insert_one(query)
+        return f'Success create new logs DB!'
+    else:
+        logsArray = data.get('logs')
+        logsArray.append(logged)
+        update = {
+            "$set": {
+                'logs': logsArray,
+            }
+        }
+        logs.update_one({'database': 'User Logs'}, update)
+        return f'Success add logs!'
+    
+async def showlogs():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    logs = db[f'logs']
+
+    data = logs.find_one({'database': 'User Logs'})
+    if data is None:
+        return {'status': 400, 'message': 'Logs not found!'}
+    else:
+        return {'status': 200, 'data': data['logs']}
+    
+async def deletelogs():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    logs = db[f'logs']
+
+    data = logs.find_one({'database': 'User Logs'})
+    if data is None:
+        return {'status': 400, 'message': 'Logs not found!'}
+    else:
+        update = {
+            "$set": {
+                'logs': [],
+            }
+        }
+        logs.update_one({'database': 'User Logs'}, update)
+        return {'status': 200, 'message': 'Success delete logs!'}

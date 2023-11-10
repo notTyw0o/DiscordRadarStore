@@ -115,3 +115,70 @@ async def deploy(footer):
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
     return embed
+
+async def deploylicense(footer):
+    assets = await mongo.getassets()
+    assets = assets['assets']
+    siren = assets.get('sticker_1')
+    arrow = assets.get('sticker_2')
+    money = assets.get('sticker_3')
+    worldlock = assets.get('sticker_4')
+    crown = assets.get('sticker_5')
+    embed = discord.Embed(
+        title="",
+        description="",
+        color=0x0e0808
+    )
+    embed.add_field(
+        name=f"{siren} **User Command** {siren}",
+        value=f""
+        )
+    embed.set_image(url=assets.get('bannerurl'))
+    embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
+    return embed
+
+async def checkstocklisen(listassets, footer):
+    assets = await mongo.getassets()
+    
+    assets = assets['assets']
+    siren = assets.get('sticker_1')
+    arrow = assets.get('sticker_2')
+    money = assets.get('sticker_3')
+    worldlock = assets.get('sticker_4')
+    crown = assets.get('sticker_5')
+
+    embed = discord.Embed(
+        title="",
+        description="",
+        color=0x0e0808
+    )
+
+    for data in listassets['data']:
+        embed.add_field(
+        name=f"{crown} **{data['productName']}**",
+        value=f"{arrow} Code : {data['productId']}\n{arrow} Price : {data['productPrice']} {worldlock}\n{arrow} Stock : {data['totalstock']}", inline=True)
+    
+    embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
+    return embed
+
+async def textembed(text):
+    assets = await mongo.getassets()
+    
+    assets = assets['assets']
+    siren = assets.get('sticker_1')
+    arrow = assets.get('sticker_2')
+    money = assets.get('sticker_3')
+    worldlock = assets.get('sticker_4')
+    crown = assets.get('sticker_5')
+
+    embed = discord.Embed(
+        title="",
+        description="",
+        color=0x0e0808
+    )
+
+    embed.add_field(
+        name=f"{siren} {text}",
+        value=f""
+        )
+    return embed

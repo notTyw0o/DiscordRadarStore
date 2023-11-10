@@ -103,6 +103,26 @@ async def addProduct(productName: str, productId: str, productPrice: int, roleid
         error_message = str(e)
         print(error_message)
         return f'Error occurred, Please contact support!'
+
+async def addProductLisen(productPrice: int, roleid):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    collection = db[f'productlisen']
+
+    data = collection.find_one({'database': 'User Product'})
+    if data is None:
+        query = {
+            'database': 'User Product',
+            'productlist': [{
+                'productName': 'Lisensi Radar Bot',
+                'productId': 'botlisen',
+                'productPrice': productPrice,
+                'roleId': roleid
+            }]
+        }
+        collection.insert_one(query)
+        return f'Success add product to databases!'
+    else:
+        return f'Product already exist in databases!'
     
 async def removeproduct(productId: str):
     db = client[f'user_{client_data.SECRET_KEY}']
@@ -188,6 +208,49 @@ async def addstock(productId: str, productdetails: str):
             stock.update_one({'productId': productId}, update)
         return 'Stock successfully added to the databases!'
 
+async def addstocklisen(amount: int):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    product = db[f'productlisen']
+    stock = db[f'stocklisen']
+
+    productId = 'botlisen'
+    productdetails = 'xx'
+
+    query = product.find_one({'database': 'User Product'})
+    productCheck = 0 #if 0 then its False
+    for data in query.get('productlist'):
+        if data.get('productId') == productId:
+            productCheck = productCheck + 1
+            break
+    
+    if query is None:
+        return 'Database not found!'
+    elif productCheck == 0:
+        return 'Product not existed in the databases!'
+    else:
+        newstock = []
+        for i in range(amount):
+            newstock.append(productdetails)
+
+        stockQuery = stock.find_one({'productId': productId})
+        if stockQuery is None:
+            stockdata = {
+                'database': 'User Stock',
+                'productId': productId,
+                'stock': [productdetails]
+            }
+            stock.insert_one(stockdata)
+        else:
+            stockArray = stockQuery.get('stock')
+            stockArray.extend(newstock)
+            update = {
+                "$set": {
+                    "stock": stockArray
+                }
+            }
+            stock.update_one({'productId': productId}, update)
+        return 'Stock successfully added to the databases!'
+
 async def showstock(productId: str):
     db = client[f'user_{client_data.SECRET_KEY}']
     stock = db[f'stock']
@@ -206,6 +269,31 @@ async def removestock(productId: str, index: int, isAll: bool):
     db = client[f'user_{client_data.SECRET_KEY}']
     stock = db[f'stock']
 
+    data = stock.find_one({'productId': productId})
+    if data is None:
+        return f'Nothing to delete!'
+    elif isAll:
+        update = {
+                "$set": {
+                    "stock": []
+                }
+            }
+        stock.update_one({'productId': productId}, update)
+        return f'Success remove all stocks available!'
+    else:
+        data.get('stock').pop(index)
+        modified = data.get('stock')
+        update = {
+                "$set": {
+                    "stock": modified
+                }
+            }
+        stock.update_one({'productId': productId}, update)
+        return f'Success remove stocks on index {index}'
+    
+async def removestocklisen(productId: str, index: int, isAll: bool):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    stock = db[f'stocklisen']
     data = stock.find_one({'productId': productId})
     if data is None:
         return f'Nothing to delete!'
@@ -482,6 +570,32 @@ async def checktotalstock(productid: str):
     else:
         totalstock = int(len(data.get('stock')))
     return totalstock
+
+async def checktotalstocklisen():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    stock = db[f'stocklisen']
+
+    data = stock.find_one({'productId': 'botlisen'})
+    totalstock = 0
+    if data is None:
+        pass
+    else:
+        totalstock = int(len(data.get('stock')))
+    return totalstock
+
+async def checkstocklisen():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    product = db[f'productlisen']
+    
+    data = product.find_one({'database': 'User Product'})
+    if data is None:
+        return {'status': 400, 'message': 'Product is not found!'}
+    else:
+        array = data.get('productlist')
+        for index, data in enumerate(array):
+            stock = await checktotalstocklisen()
+            data['totalstock'] = stock
+        return {'status': 200, 'data': array}
         
 
 async def checkstock():
@@ -504,6 +618,33 @@ async def isOrder(productid: str, amount: int):
 
     productdata = product.find_one({'database': 'User Product'})
     stockcheck = await checktotalstock(productid)
+    if productdata is None:
+        return {'status': 400, 'message': 'Product not been set!'}
+    elif productdata is not None and stockcheck >= amount:
+        array = productdata.get('productlist')
+        count = 0
+        price = 0
+        
+        for data in array:
+            if data['productId'] == productid:
+                count = count + 1
+                object = data
+                break
+            else:
+                pass
+        if count == 0:
+            return {'status': 400, 'message': 'Product code is invalid'}
+        else:
+            return {'status': 200, 'message': 'Processing order..\n Bot will sent product via Direct Messages!', 'productdata': object}
+    else:
+        return {'status': 400, 'message': 'Insufficient Stock!'}
+
+async def isOrderlisen(productid: str, amount: int):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    product = db[f'productlisen']
+
+    productdata = product.find_one({'database': 'User Product'})
+    stockcheck = await checktotalstocklisen()
     if productdata is None:
         return {'status': 400, 'message': 'Product not been set!'}
     elif productdata is not None and stockcheck >= amount:
@@ -698,3 +839,84 @@ async def deletelogs():
         }
         logs.update_one({'database': 'User Logs'}, update)
         return {'status': 200, 'message': 'Success delete logs!'}
+
+async def claim(secretkey: str, license: str):
+    db = client[f'user']
+    bot = db[f'data']
+
+    data = bot.find_one({'secretkey': secretkey})
+    if data is None:
+        return {'status': 400, 'message': 'Secret key not found!'}
+    else:
+        if license in data['license'] and data['status'] == False:
+            data['license'].remove(license)
+            expdate = util_function.getonemonth()
+            update = {
+                "$set": {
+                    "license": data['license'],
+                    "expdate": expdate,
+                    "status": True
+                }
+            }
+            bot.update_one({'secretkey': secretkey}, update)
+            return {'status': 200, 'message': f'Success, bot will expired on {expdate}'}
+        elif license in data['license'] and data['status'] == True:
+            data['license'].remove(license)
+            expdate = util_function.addonemonth(data['expdate'])
+            update = {
+                "$set": {
+                    "license": data['license'],
+                    "expdate": expdate,
+                    "status": True
+                }
+            }
+            bot.update_one({'secretkey': secretkey}, update)
+            return {'status': 200, 'message': f'Success, bot will expired on {expdate}'}
+        else:
+            return {'status': 400, 'message': f'License is not valid!'}
+        
+async def registerbot(discordtoken: str, discordid: str, license, secretkey: str):
+    db = client[f'user']
+    user = db[f'data']
+
+    data = user.find_one({'discordtoken': discordtoken})
+    secretcheck = user.find_one({'secretkey': secretkey})
+    if data is None and secretcheck is None:
+        query = {
+            'database': 'User Data',
+            'discordid': discordid,
+            'discordtoken': discordtoken,
+            'secretkey': secretkey,
+            'presence': 'Hello World!',
+            'license': [license],
+            'expdate': '',
+            'status': False
+        }
+        user.insert_one(query)
+        return {'status': 200, 'message': 'Success, check direct message to get your details!'}
+    elif data is not None and data['secretkey'] == secretkey:
+        oldarray = data['license']
+        newarray = oldarray.append(license)
+        update = {
+                "$set": {
+                    "license": data['license']
+                }
+            }
+        user.update_one({'discordtoken': discordtoken}, update)
+        return {'status': 200, 'message': 'Success, check direct message to get your details!'}
+    elif data is not None and data['secretkey'] != secretkey:
+        return {'status': 400, 'message': 'Wrong secretkey for that Token!'}
+    elif secretcheck is not None:
+        return {'status': 400, 'message': 'Secretkey already exist, use another password!'}
+
+async def checksecret(SECRET_KEY: str):
+    db = client["user"]
+    collection = db["data"]
+
+    data = collection.count_documents({'secretkey': SECRET_KEY})
+    if data == 1:
+        return {'status': 200, 'message': 'Authorized!'}
+    elif data == 0:
+        return {'status': 400, 'message': 'Unauthorized!'}
+    else:
+        return {'status': 400, 'message': 'Error occured!'}

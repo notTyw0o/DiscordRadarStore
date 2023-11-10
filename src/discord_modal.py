@@ -88,6 +88,101 @@ class Order(discord.ui.Modal):
             await interaction.response.send_message(isState['message'], ephemeral=True)
         elif userBalance < totalprice:
             await interaction.response.send_message(f'Insufficient balance!', ephemeral=True)
+    
+class RegisterLicense(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="Discord Token"))
+        self.add_item(discord.ui.InputText(label="Secret Password"))
+
+    async def callback(self, interaction: discord.Interaction):
+        userbalance = await mongo.info(str(interaction.user.id))
+        userbalance = userbalance['worldlock']['balance']
+        check = await mongo.isOrderlisen('botlisen', 1)
+        if check['status'] == 200 and userbalance >= check['productdata']['productPrice']:
+            await mongo.removestocklisen('botlisen', 0, False)
+            await mongo.give(interaction.user.id,'worldlock', -check['productdata']['productPrice'])
+            secretkey = util_function.generatemd5(str(interaction.user.id) + self.children[1].value)
+            license = util_function.generate_random_string(10)
+            request = await mongo.registerbot(self.children[0].value, str(interaction.user.id), license, secretkey)
+            if request['status'] == 200:
+                user = interaction.user
+                line = "-------------------------"
+                await user.send(f"```Thank you for purchasing\n{line}\nOrder details\n-> License : {license}\n-> Secretkey : {secretkey} *DO NOT SHARE\n{line}\nFor further assistance, contact owner!```")
+                try:
+                    guild = interaction.guild
+                    role = discord.utils.get(guild.roles, id=int(check['productdata']['roleId']))
+                    member = guild.get_member(user.id)
+                    await member.add_roles(role)
+                    embed = await discordembed.textembed(f"Success add new role, Please check your direct messages!")
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                except Exception as e:
+                    embed = await discordembed.textembed(f"Success, Please check your direct messages!")
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+            else:
+                await interaction.response.send_message(request['message'], ephemeral=True)
+        else:
+            await interaction.response.send_message(f'Error occured!', ephemeral=True)
+
+class Claim(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="Secret key"))
+        self.add_item(discord.ui.InputText(label="License"))
+
+    async def callback(self, interaction: discord.Interaction):
+        request = await mongo.claim(self.children[0].value, self.children[1].value)
+        if request['status'] == 200:
+            await interaction.response.send_message(request['message'], ephemeral=True)
+        else:
+            await interaction.response.send_message(request['message'], ephemeral=True)
+
+class Start(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="Secret key"))
+
+    async def callback(self, interaction: discord.Interaction):
+        request = await util_function.startbot(self.children[0].value)
+        if request['status'] == 200:
+            await interaction.response.send_message(request['message'], ephemeral=True)
+        else:
+            await interaction.response.send_message(request['message'], ephemeral=True)
+
+class Off(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="Secret key"))
+
+    async def callback(self, interaction: discord.Interaction):
+        if self.children[0].value in ['API', 'RadarStoreHelper']:
+            await interaction.response.send_message(f'Error!', ephemeral=True)
+        else:
+            request = await util_function.offbot(self.children[0].value)
+            if request['status'] == 200:
+                await interaction.response.send_message(request['message'], ephemeral=True)
+            else:
+                await interaction.response.send_message(request['message'], ephemeral=True)
+
+class Restart(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="Secret key"))
+
+    async def callback(self, interaction: discord.Interaction):
+        if self.children[0].value in ['API', 'RadarStoreHelper']:
+            await interaction.response.send_message(f'Error!', ephemeral=True)
+        else:
+            request = await util_function.restartbot(self.children[0].value)
+            if request['status'] == 200:
+                await interaction.response.send_message(request['message'], ephemeral=True)
+            else:
+                await interaction.response.send_message(request['message'], ephemeral=True)
 
             
 

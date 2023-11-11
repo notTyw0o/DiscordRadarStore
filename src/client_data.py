@@ -21,7 +21,8 @@ try:
     OWNER_ID = data['data']['discordid']
     PRESENCE = data['data']['presence']
 except:
-    raise ValueError('Data not found')
+    print(response.json())
+    sys.exit()
     
 
 

@@ -104,5 +104,17 @@ class CommandsAdmin(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
 
+    @commands.slash_command(
+    name='addip',
+    description='Whitelisting IP!',
+    )
+    async def addip(self, ctx, ip: Option(str, 'Target IP!', required=True)):
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isAuthor.get('status') == 200:
+            request = await mongo.addip(ip)
+            await ctx.respond(request)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+
 def setup(bot):
     bot.add_cog(CommandsAdmin(bot))

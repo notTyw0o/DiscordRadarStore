@@ -920,3 +920,28 @@ async def checksecret(SECRET_KEY: str):
         return {'status': 400, 'message': 'Unauthorized!'}
     else:
         return {'status': 400, 'message': 'Error occured!'}
+    
+async def addip(ip: str):
+    db = client[f'user']
+    listipwhitelist = db[f'ip']
+
+    filter ={'database': 'IP Whitelist'}
+
+    data = listipwhitelist.find_one(filter)
+    if data is None:
+        query = {
+            'database': 'IP Whitelist',
+            'ip': [ip]
+        }
+        listipwhitelist.insert_one(query)
+        return 'Success add IP to whitelist!'
+    else:
+        oldarray = data['ip']
+        newarray = oldarray.append(ip)
+        update = {
+                "$set": {
+                    "ip": data['ip']
+                }
+            }
+        listipwhitelist.update_one(filter, update)
+        return 'Success add new IP to whitelist!'

@@ -945,3 +945,83 @@ async def addip(ip: str):
             }
         listipwhitelist.update_one(filter, update)
         return 'Success add new IP to whitelist!'
+    
+async def addadmin(discordid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    admin = db[f'admin']
+
+    filter = {'database': 'User Admin'}
+
+    data = admin.find_one(filter)
+    if data is None:
+        query = {
+            'database': 'User Admin',
+            'admin': [discordid]
+        }
+        admin.insert_one(query)
+        return f'Success add admin to the databases!'
+    elif discordid in data['admin']:
+        return f'Target Discord ID is alread an admin!'
+    else:
+        data['admin'].append(discordid)
+        update = {
+                "$set": {
+                    "admin": data['admin']
+                }
+            }
+        admin.update_one(filter, update)
+        return f'Success add admin to the databases!'
+    
+async def removeadmin(discordid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    admin = db[f'admin']
+
+    filter = {'database': 'User Admin'}
+
+    data = admin.find_one(filter)
+    if data is None or discordid not in data['admin']:
+        return f'Admin list does not found!'
+    elif discordid in data['admin']:
+        data['admin'].remove(discordid)
+        update = {
+                "$set": {
+                    "admin": data['admin']
+                }
+            }
+        admin.update_one(filter, update)
+        return f'Success remove admin from the databases!'
+    
+async def getadmin():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    admin = db[f'admin']
+
+    filter = {'database': 'User Admin'}
+
+    data = admin.find_one(filter)
+    if data is None:
+        return {'status': 400, 'message': 'Admin query is not found!', 'data': []}
+    else:
+        return {'status': 200, 'message': 'Success', 'data': data['admin']}
+    
+async def setup():
+    db = client[f'user_{client_data.SECRET_KEY}']
+
+    setuplist = [
+        {'name': 'assets', 'isSetup': False, 'command': '/addassets', 'filter': {'database': 'User Assets'}},
+        {'name': 'channelhistory', 'isSetup': False, 'command': '/setchannelhistory', 'filter': {'database': 'User Channel History'}},
+        {'name': 'deposit', 'isSetup': False, 'command': '/setdeposit', 'filter': {'database': 'User Deposit'}},
+        {'name': 'product', 'isSetup': False, 'command': '/setproduct', 'filter': {'database': 'User Product'}},
+        {'name': 'states', 'isSetup': False, 'command': '/setorderstate', 'filter': {'database': 'User State'}},
+        {'name': 'webhook', 'isSetup': False, 'command': '/setwebhook', 'filter': {'database': 'User Webhook'}}
+    ]
+
+    for index, setup in enumerate(setuplist):
+        usersetup = db[setup['name']]
+        data = usersetup.find_one(setup['filter'])
+        if data is not None:
+            setuplist[index]['isSetup'] = True
+        else:
+            pass
+    return setuplist
+
+    

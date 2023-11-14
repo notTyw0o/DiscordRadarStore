@@ -469,6 +469,87 @@ class Commands(commands.Cog):
             await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='addadmin',
+    description='Add admin access to your bot!',
+    )
+    async def addadmin(self, ctx, discordid: Option(str, 'Your new presence!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.addadmin(discordid)
+            embed = await discordembed.textembed(request)
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='removeadmin',
+    description='Remove admin access to your bot!',
+    )
+    async def removeadmin(self, ctx, discordid: Option(str, 'Your new presence!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.removeadmin(discordid)
+            embed = await discordembed.textembed(request)
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+            
+    @commands.slash_command(
+    name='showadmin',
+    description='Remove admin access to your bot!',
+    )
+    async def showadmin(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.getadmin()
+            if request['status'] == 400:
+                embed = await discordembed.textembed(request['message'])
+            else:
+                assets = await mongo.getassets()
+                msg = ''
+                for text in request['data']:
+                    msg += assets['assets']['sticker_2'] + ' <@'+text+'>' + '\n'
+                msg = msg.rstrip('\n')
+                embed = await discordembed.secondtextembed(msg, 'Admin List')
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setup',
+    description='A guidance to setup your bot!',
+    )
+    async def setup(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setup()
+            assets = await mongo.getassets()
+            arrow = assets['assets']['sticker_2']
+            msg = ''
+            for text in request:
+                if text['isSetup'] == True:
+                    msg += f'{arrow} {text["name"]} ✅, commands: {text["command"]}\n'
+                else:
+                    msg += f'{arrow} {text["name"]} ❌, commands: {text["command"]}\n'
+            msg = msg.rstrip('\n')
+            embed = await discordembed.secondtextembed(msg, 'Setup Progress')
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
         
 
 def setup(bot):

@@ -10,7 +10,8 @@ import subprocess
 import mongo
 
 async def isAuthor(received_id: str, owner_id: str):
-    if str(received_id) == owner_id:
+    adminlist = await mongo.getadmin()
+    if str(received_id) == owner_id or str(received_id) in adminlist['data']:
         response = {
             'status': 200,
             'message': 'Authorized!'

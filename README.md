@@ -41,14 +41,22 @@ __Add Stock__
 After you put a product of course you need to update your stocks too, to update your stocks you can simply use
 ```
 /addstock *productid, productdetails
+/addstockbulk *productid, productdetails
 ```
 _productdetails_ variable is the variable that bot will send to the customer. So update it carefully
+
+_/addstock_ ex:
 ```
-ex:
 /addstock rdp 192.168.1.1:admin:password123
 /addstock cid AHAY123:password123
 /addstock lisensinuron ZXCDSAFE1543
 ```
+_/addstockbulk_ ex:
+```
+/addstockbulk lisensinuron xxx,xxx,xxx,xxx,xxx
+```
+Separate every stocks with comma.
+
 _Note_
 _This command can only be used to the registered Discord ID_
 
@@ -166,6 +174,44 @@ You can set your order state by using this command below
 /setpresence *yournewpresence
 ```
 It will set new order state to your bot, if the state is True, the bot will not process any incoming orders.
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Live Stock__
+You can run or stop an livestock in your server by using
+```
+/startlivestock
+/stoplivestock
+```
+It might consider as a spam to your customer becuase it sends embed every x seconds, so use it wisely.
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Channel History__
+You can set your channel history by using
+```
+/setchannelhistory *channelid
+```
+After your customer order product in your server, the bot automatically sends buy logs the target channel id.
+
+_Note_
+_This command can only be used to the registered Discord ID_
+
+__Admin Privilege__
+You can add admin privileges to your server admin by using
+```
+/addadmin *discordid
+```
+To remove
+```
+/removeadmin *discordid
+```
+To show all admin
+```
+/showadmin
+```
 
 _Note_
 _This command can only be used to the registered Discord ID_

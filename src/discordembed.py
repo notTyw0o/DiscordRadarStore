@@ -161,7 +161,7 @@ async def checkstocklisen(listassets, footer):
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
     return embed
 
-async def textembed(text):
+async def textembed(text: str):
     assets = await mongo.getassets()
     
     assets = assets['assets']
@@ -180,5 +180,27 @@ async def textembed(text):
     embed.add_field(
         name=f"{siren} {text}",
         value=f""
+        )
+    return embed
+
+async def secondtextembed(text: str, title: str):
+    assets = await mongo.getassets()
+    
+    assets = assets['assets']
+    siren = assets.get('sticker_1')
+    arrow = assets.get('sticker_2')
+    money = assets.get('sticker_3')
+    worldlock = assets.get('sticker_4')
+    crown = assets.get('sticker_5')
+
+    embed = discord.Embed(
+        title="",
+        description="",
+        color=0x0e0808
+    )
+
+    embed.add_field(
+        name=f"{siren} **{title}** {siren}",
+        value=f"{text}"
         )
     return embed

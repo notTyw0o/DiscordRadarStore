@@ -1,5 +1,6 @@
 from discord.ext import commands, tasks
 from discord.commands import Option
+import discord
 import mongo
 import util_function
 import client_data
@@ -390,9 +391,19 @@ class Commands(commands.Cog):
                     footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
                 except:
                     footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                
                 embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
-                await self.last_message.delete()  # Delete the previous message
-                self.last_message = await ctx.send(embed=embed)
+                
+                # Check if the last message is still valid
+                try:
+                    last_message = await ctx.fetch_message(self.last_message.id)
+                except:
+                    last_message = None
+                
+                if last_message:
+                    await last_message.edit(embed=embed)
+                else:
+                    self.last_message = await ctx.send(embed=embed)
         else:
             request = await mongo.checkstock()
             template = await mongo.getassets()
@@ -550,7 +561,227 @@ class Commands(commands.Cog):
             await ctx.respond(isAuthor.get('message'))
         else:
             await ctx.respond(isOwner.get('message'))
-        
+
+    @commands.slash_command(
+    name='checkuser',
+    description='Check user information!',
+    )
+    async def checkuser(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            userid = discordid
+            request = await mongo.info(userid)
+            template = await mongo.getassets()
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+                except:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.infoembed(request, template.get('assets'), footer)
+                await ctx.respond(embed=embed)
+            elif request.get('status') == 400:
+                await ctx.respond(request.get('message'))
+            elif template.get('status') == 400:
+                await ctx.respond(template.get('message'))
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setuser',
+    description='Register or change registered information!',
+    )
+    async def setuser(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), growid: Option(str, 'New Grow ID!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.register(discordid, growid)
+            embed = await discordembed.textembed(request)
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='addrole',
+    description='Register or change registered information!',
+    )
+    async def addrole(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), role: Option(str, 'New Grow ID!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            role = ctx.guild.get_role(int(role))
+            if role is None:
+                await ctx.respond("Role not found.")
+                return
+            member = ctx.guild.get_member(int(discordid))
+            if member is None:
+                await ctx.respond("Member not found.")
+                return
+            await member.add_roles(role)
+            await ctx.respond(f"Added {role.name} role to <@{discordid}>.")
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    # User Commands
+    @commands.slash_command(
+    name='depo',
+    description='Show deposit information!',
+    )
+    async def depo(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            request = await mongo.getdeposit()
+            template = await mongo.getassets()
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
+                except:
+                    footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.depositembed(request, template.get('assets'), footer)
+                await ctx.respond(embed=embed)
+            elif request.get('status') == 400:
+                await ctx.respond(request.get('message'))
+            elif template.get('status') == 400:
+                await ctx.respond(template.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='stock',
+    description='Show stock information!',
+    )
+    async def stock(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            request = await mongo.checkstock()
+            template = await mongo.getassets()
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
+                except:
+                    footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
+                await ctx.respond(embed=embed)
+            elif request.get('status') == 400:
+                await ctx.respond(request.get('message'))
+            elif template.get('status') == 400:
+                await ctx.respond(template.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='register',
+    description='Register your Grow ID!',
+    )
+    async def register(self, ctx, growid: Option(str, 'Your Grow ID!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            request = await mongo.register(str(ctx.user.id), growid)
+            embed = await discordembed.textembed(request)
+            await ctx.respond(embed=embed)
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='info',
+    description='Check your information!',
+    )
+    async def info(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            userid = str(ctx.author.id)
+            request = await mongo.info(userid)
+            template = await mongo.getassets()
+            if request.get('status') == 200 and template.get('status') == 200:
+                try:
+                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+                except:
+                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                embed = await discordembed.infoembed(request, template.get('assets'), footer)
+                await ctx.respond(embed=embed)
+            elif request.get('status') == 400:
+                await ctx.respond(request.get('message'))
+            elif template.get('status') == 400:
+                await ctx.respond(template.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='order',
+    description='Order an product!',
+    )
+    async def order(self, ctx, productid: Option(str, 'Product ID!', required=True), amount: Option(int, 'Product amount!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            isOrder = await mongo.isOrder(productid, amount)
+            isState = await mongo.checkstate()
+            userBalance = await mongo.info(str(ctx.author.id))
+
+            try:
+                userBalance = userBalance['worldlock']['balance']
+                totalprice = int(amount) * int(isOrder['productdata']['productPrice'])
+                isOrder['productdata']['amount'] = int(amount)
+                isOrder['productdata']['totalprice'] = totalprice
+            except:
+                await ctx.respond('Insufficient stock!')
+                return
+
+            if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:
+                await mongo.setorderstate('True')
+                request = await mongo.takestock(productid, amount)
+                if request['status'] == 200:
+                    removebalance = await mongo.give(str(ctx.author.id), 'worldlock', -totalprice)
+                    if "Success" in removebalance:
+                        await mongo.setorderstate('False')
+                        assets = await mongo.getassets()
+                        try:
+                            footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
+                        except:
+                            footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                        embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer)
+                        await ctx.author.send(f"```{request['message']}```")
+                        await ctx.author.send(embed=embed)
+                        userlogs = {
+                            'discordid': str(ctx.author.id), 
+                            'productname': isOrder['productdata']['productName'],
+                            'amount': str(isOrder['productdata']['amount']),
+                            'totalprice': str(isOrder['productdata']['totalprice']),
+                            'product': request['message']
+                            }
+                        await mongo.addlogs(userlogs)
+                        try:
+                            role = ctx.guild.get_role(int(isOrder['productdata']['roleId']))
+                            await ctx.author.add_roles(role)
+                            await ctx.respond("Success add new role\nCheck your direct messages!")
+                        except Exception as e:
+                            await ctx.respond("Check your direct messages!")
+                        channelid = await mongo.getchannelhistory()
+                        if channelid['status'] == 200:
+                            guild = ctx.guild
+                            channel = guild.get_channel(int(channelid['data']))
+                            await channel.send(embed=embed)
+                        else:
+                            pass
+                    else:
+                        await mongo.setorderstate('False')
+                        await ctx.respond(removebalance)
+                else:
+                    await mongo.setorderstate('False')
+                    await ctx.respond(request['message'])
+            elif isOrder['status'] == 400:
+                await ctx.respond(isOrder['message'])
+            elif isState['status'] == 400:
+                await ctx.respond(isState['message'])
+            elif userBalance < totalprice:
+                await ctx.respond(f'Insufficient balance!')
+        else:
+            await ctx.respond(isOwner.get('message'))
 
 def setup(bot):
     bot.add_cog(Commands(bot))

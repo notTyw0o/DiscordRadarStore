@@ -96,7 +96,7 @@ def expired(date_string):
 async def startbot(secretkey: str):
     check = await mongo.checksecret(secretkey)
     if check['status'] == 200:
-        directory_path = "/root/Project/DiscordRadarStore/src"
+        directory_path = "/home/Radar/Project/DiscordRadarStore/src"
         os.chdir(directory_path)
 
         command = f"pm2 start main.py --interpreter=python3 --name {secretkey} -- {secretkey}"

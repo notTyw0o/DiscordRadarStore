@@ -76,20 +76,24 @@ async def checkstockembed(listassets, assets, footer):
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
     return embed
 
-async def orderembed(product, assets, footer):
+async def orderembed(product, assets, footer, custdiscordid):
+    totalbuy = await mongo.addtotalbuy()
     siren = assets.get('sticker_1')
     arrow = assets.get('sticker_2')
     money = assets.get('sticker_3')
     worldlock = assets.get('sticker_4')
     crown = assets.get('sticker_5')
+    productName = product['productName']
+    amount = product['amount']
+    totalprice = product['totalprice']
     embed = discord.Embed(
         title="",
         description="",
         color=0x0e0808
     )
     embed.add_field(
-        name=f"{siren} **Order Success** {siren}",
-        value=f"{crown} **{product['productName']}** \n{arrow} Amount: {product['amount']}\n{arrow} Total price: {product['totalprice']}", inline=True
+        name=f"{siren} **Order Success #{totalbuy}** {siren}",
+        value=f"{arrow} **Buyer : <@{custdiscordid}>**\n{arrow} **Product : {productName}**\n{arrow} **Total : {amount}**\n{arrow} **Total Price : {totalprice} {worldlock}**\n {siren} **Note : Give reps for warranty!**", inline=True
         )
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))

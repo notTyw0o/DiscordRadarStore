@@ -52,8 +52,8 @@ class Order(discord.ui.Modal):
                         footer = {'name': interaction.user.name,'time': await util_function.timenow(), 'avatar': interaction.user.avatar.url}
                     except:
                         footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                    embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer)
-                    await user.send(f"```{request['message']}```")
+                    embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(interaction.user.id))
+                    await user.send(f"```== YOUR ORDER DETAILS ==\n{request['message']}```")
                     await user.send(embed=embed)
                     userlogs = {
                         'discordid': str(interaction.user.id), 

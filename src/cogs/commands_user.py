@@ -744,8 +744,8 @@ class Commands(commands.Cog):
                             footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
                         except:
                             footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                        embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer)
-                        await ctx.author.send(f"```{request['message']}```")
+                        embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(ctx.author.id))
+                        await ctx.author.send(f"```== YOUR ORDER DETAILS ==\n{request['message']}```")
                         await ctx.author.send(embed=embed)
                         userlogs = {
                             'discordid': str(ctx.author.id), 

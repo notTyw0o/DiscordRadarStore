@@ -1024,4 +1024,28 @@ async def setup():
             pass
     return setuplist
 
+async def addtotalbuy():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    buy = db[f'totalbuy']
+
+    filter = {'database': 'User Total Buy'}
+    data = buy.find_one(filter)
+    if data is None:
+        total = 1
+        query = {
+            'database': 'User Total Buy',
+            'total': total
+        }
+        buy.insert_one(query)
+        return total
+    else:
+        newtotal = data['total'] + 1
+        update = {
+                "$set": {
+                    "total": newtotal
+                }
+            }
+        buy.update_one(filter, update)
+        return newtotal
+
     

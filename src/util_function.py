@@ -3,6 +3,7 @@ from discord.ext import commands
 import hashlib
 import locale
 from datetime import datetime, timedelta
+import client_data
 import random
 import string
 import os
@@ -123,3 +124,31 @@ async def restartbot(secretkey: str):
         return {'status': 200, 'message': 'Success, try check your bot now!'}
     else:
         return {'status': 400, 'message': check['message']}
+    
+def write_text_file(text):
+    directory_path = '/home/Radar/txtfiles'  # Replace this with your desired directory path
+    file_name = f'{client_data.SECRET_KEY}.txt'
+    file_content = text
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+    # File path
+    file_path = os.path.join(directory_path, file_name)
+
+    # Write content to the file
+    with open(file_path, 'w') as file:
+        file.write(file_content)
+
+    return file_path
+
+def delete_text_file():
+    file_path_to_delete = f'/home/Radar/txtfiles/{client_data.SECRET_KEY}.txt'  # Replace with the file path you want to delete
+
+    try:
+        os.remove(file_path_to_delete)
+        return True  # File deleted successfully
+    except OSError as e:
+        print(f"Error: {e.filename} - {e.strerror}")
+        return False

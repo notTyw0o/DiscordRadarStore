@@ -740,13 +740,6 @@ class Commands(commands.Cog):
                     if "Success" in removebalance:
                         await mongo.setorderstate('False')
                         assets = await mongo.getassets()
-                        try:
-                            footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
-                        except:
-                            footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                        embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(ctx.author.id))
-                        await ctx.author.send(f"```== YOUR ORDER DETAILS ==\n{request['message']}```")
-                        await ctx.author.send(embed=embed)
                         userlogs = {
                             'discordid': str(ctx.author.id), 
                             'productname': isOrder['productdata']['productName'],
@@ -755,6 +748,16 @@ class Commands(commands.Cog):
                             'product': request['message']
                             }
                         await mongo.addlogs(userlogs)
+                        try:
+                            footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
+                        except:
+                            footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                        embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(ctx.author.id))
+                        files = util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{request['message']}")
+                        file = discord.File(f'/home/Radar/txtfiles/{client_data.SECRET_KEY}.txt')
+                        await ctx.author.send(file=file)
+                        await ctx.author.send(embed=embed)
+                        util_function.delete_text_file()
                         try:
                             role = ctx.guild.get_role(int(isOrder['productdata']['roleId']))
                             await ctx.author.add_roles(role)

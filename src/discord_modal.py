@@ -2,6 +2,7 @@ import discord
 import mongo
 import discordembed
 import util_function
+import client_data
 
 bot = discord.Bot()
 
@@ -53,8 +54,11 @@ class Order(discord.ui.Modal):
                     except:
                         footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                     embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(interaction.user.id))
-                    await user.send(f"```== YOUR ORDER DETAILS ==\n{request['message']}```")
+                    files = util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{request['message']}")
+                    file = discord.File(f'/home/Radar/txtfiles/{client_data.SECRET_KEY}.txt')
+                    await user.send(file=file)
                     await user.send(embed=embed)
+                    util_function.delete_text_file()
                     userlogs = {
                         'discordid': str(interaction.user.id), 
                         'productname': isOrder['productdata']['productName'],

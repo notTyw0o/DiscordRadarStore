@@ -688,7 +688,7 @@ class Commands(commands.Cog):
     name='help',
     description='Show help!',
     )
-    async def register(self, ctx):
+    async def help(self, ctx):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         if isOwner.get('status') == 200:
             assets = await mongo.getassets()

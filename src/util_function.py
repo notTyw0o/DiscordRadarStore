@@ -125,9 +125,9 @@ async def restartbot(secretkey: str):
     else:
         return {'status': 400, 'message': check['message']}
     
-def write_text_file(text):
+async def write_text_file(text, textname):
     directory_path = '/home/Radar/txtfiles'  # Replace this with your desired directory path
-    file_name = f'{client_data.SECRET_KEY}.txt'
+    file_name = f'{textname}.txt'
     file_content = text
 
     # Create the directory if it doesn't exist
@@ -143,8 +143,8 @@ def write_text_file(text):
 
     return file_path
 
-def delete_text_file():
-    file_path_to_delete = f'/home/Radar/txtfiles/{client_data.SECRET_KEY}.txt'  # Replace with the file path you want to delete
+async def delete_text_file(textname):
+    file_path_to_delete = f'/home/Radar/txtfiles/{textname}.txt'  # Replace with the file path you want to delete
 
     try:
         os.remove(file_path_to_delete)

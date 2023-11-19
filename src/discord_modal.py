@@ -3,6 +3,7 @@ import mongo
 import discordembed
 import util_function
 import client_data
+import asyncio
 
 bot = discord.Bot()
 
@@ -42,10 +43,13 @@ class Order(discord.ui.Modal):
         if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:
             await mongo.setorderstate('True')
             request = await mongo.takestock(self.children[0].value, int(self.children[1].value))
+            asyncio.create_task(mongo.setorderstate('False'))
             if request['status'] == 200:
                 removebalance = await mongo.give(str(interaction.user.id), 'worldlock', -totalprice)
                 if "Success" in removebalance:
-                    await mongo.setorderstate('False')
+                    msg = ""
+                    for text in request['data']:
+                        msg += text + "\n"
                     assets = await mongo.getassets()
                     user = interaction.user
                     guild = interaction.guild
@@ -54,30 +58,34 @@ class Order(discord.ui.Modal):
                     except:
                         footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                     embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(interaction.user.id))
-                    files = util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{request['message']}")
-                    file = discord.File(f'/home/Radar/txtfiles/{client_data.SECRET_KEY}.txt')
-                    await user.send(file=file)
-                    await user.send(embed=embed)
-                    util_function.delete_text_file()
+                    files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(interaction.user.id))
+                    file = discord.File(f'/home/Radar/txtfiles/{str(interaction.user.id)}.txt')
+                    asyncio.create_task(user.send(file=file))
+                    asyncio.create_task(user.send(embed=embed))
+                    asyncio.create_task(util_function.delete_text_file(str(interaction.user.id)))
                     userlogs = {
                         'discordid': str(interaction.user.id), 
                         'productname': isOrder['productdata']['productName'],
                         'amount': str(isOrder['productdata']['amount']),
                         'totalprice': str(isOrder['productdata']['totalprice']),
-                        'product': request['message']
+                        'product': request['data']
                         }
-                    await mongo.addlogs(userlogs)
+                    asyncio.create_task(mongo.addlogs(userlogs))
                     try:
                         role = discord.utils.get(guild.roles, id=int(isOrder['productdata']['roleId']))
                         member = guild.get_member(user.id)
                         await member.add_roles(role)
-                        await interaction.response.send_message("Success add new role\nCheck your direct messages!", ephemeral=True)
+                        arrow = assets['assets']['sticker_2']
+                        responseembed = await discordembed.secondtextembed(f'{arrow} **Added new role : {role.name} ✅**\n{arrow} **Status : Success ✅**\n**Please check Direct Messages!**', 'Order Success')
+                        asyncio.create_task(interaction.response.send_message(embed=responseembed, ephemeral=True))
                     except Exception as e:
-                        await interaction.response.send_message("Check your direct messages!", ephemeral=True)
+                        arrow = assets['assets']['sticker_2']
+                        responseembed = await discordembed.secondtextembed(f'{arrow} **Added new role : ❌**\n{arrow} **Status : Success ✅**\n**Please check Direct Messages!**', 'Order Success')
+                        asyncio.create_task(interaction.response.send_message(embed=responseembed, ephemeral=True))
                     channelid = await mongo.getchannelhistory()
                     if channelid['status'] == 200:
                         channel = guild.get_channel(int(channelid['data']))
-                        await channel.send(embed=embed)
+                        asyncio.create_task(channel.send(embed=embed))
                     else:
                         pass
                 else:

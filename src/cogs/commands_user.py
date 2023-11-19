@@ -6,6 +6,7 @@ import util_function
 import client_data
 import discordembed
 import discord_menu as menu
+import asyncio
 
 class Commands(commands.Cog):
     def __init__(self, bot):
@@ -141,7 +142,7 @@ class Commands(commands.Cog):
         self, 
         ctx,
         productid: Option(str, 'Target product ID!', required=True),
-        productprice: Option(int, 'Set a new price for the product!', required=True),
+        productprice: Option(float, 'Set a new price for the product!', required=True),
         ):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
@@ -292,7 +293,7 @@ class Commands(commands.Cog):
     name='give',
     description='Give balance to user ID!',
     )
-    async def give(self, ctx, discordid: Option(str, 'Discord ID of the target!', required=True), type: Option(str, '"worldlock" or "rupiah"!', required=True), amount: Option(int, 'Amount balance!', required=True)):
+    async def give(self, ctx, discordid: Option(str, 'Discord ID of the target!', required=True), type: Option(str, '"worldlock" or "rupiah"!', required=True), amount: Option(float, 'Amount balance!', required=True)):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
@@ -717,6 +718,11 @@ class Commands(commands.Cog):
     description='Order an product!',
     )
     async def order(self, ctx, productid: Option(str, 'Product ID!', required=True), amount: Option(int, 'Product amount!', required=True)):
+        if not ctx.guild:
+            await ctx.respond('Commands not allowed here!')
+            return
+        else:
+            pass
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         if isOwner.get('status') == 200:
             isOrder = await mongo.isOrder(productid, amount)
@@ -725,7 +731,7 @@ class Commands(commands.Cog):
 
             try:
                 userBalance = userBalance['worldlock']['balance']
-                totalprice = int(amount) * int(isOrder['productdata']['productPrice'])
+                totalprice = int(amount) * float(isOrder['productdata']['productPrice'])
                 isOrder['productdata']['amount'] = int(amount)
                 isOrder['productdata']['totalprice'] = totalprice
             except:
@@ -735,47 +741,53 @@ class Commands(commands.Cog):
             if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:
                 await mongo.setorderstate('True')
                 request = await mongo.takestock(productid, amount)
+                asyncio.create_task(mongo.setorderstate('False'))
                 if request['status'] == 200:
                     removebalance = await mongo.give(str(ctx.author.id), 'worldlock', -totalprice)
                     if "Success" in removebalance:
-                        await mongo.setorderstate('False')
+                        msg = ""
+                        for text in request['data']:
+                            msg += text + "\n"
                         assets = await mongo.getassets()
-                        userlogs = {
-                            'discordid': str(ctx.author.id), 
-                            'productname': isOrder['productdata']['productName'],
-                            'amount': str(isOrder['productdata']['amount']),
-                            'totalprice': str(isOrder['productdata']['totalprice']),
-                            'product': request['message']
-                            }
-                        await mongo.addlogs(userlogs)
                         try:
                             footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
                         except:
                             footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                         embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(ctx.author.id))
-                        files = util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{request['message']}")
-                        file = discord.File(f'/home/Radar/txtfiles/{client_data.SECRET_KEY}.txt')
-                        await ctx.author.send(file=file)
-                        await ctx.author.send(embed=embed)
-                        util_function.delete_text_file()
+                        files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(ctx.author.id))
+                        file = discord.File(f'/home/Radar/txtfiles/{str(ctx.author.id)}.txt')
+                        asyncio.create_task(ctx.author.send(file=file))
+                        asyncio.create_task(ctx.author.send(embed=embed))
+                        asyncio.create_task(util_function.delete_text_file(str(ctx.author.id)))
+                        userlogs = {
+                            'discordid': str(ctx.author.id), 
+                            'productname': isOrder['productdata']['productName'],
+                            'amount': str(isOrder['productdata']['amount']),
+                            'totalprice': str(isOrder['productdata']['totalprice']),
+                            'product': request['data']
+                            }
+                        asyncio.create_task(mongo.addlogs(userlogs))
                         try:
                             role = ctx.guild.get_role(int(isOrder['productdata']['roleId']))
                             await ctx.author.add_roles(role)
-                            await ctx.respond("Success add new role\nCheck your direct messages!")
+                            arrow = assets['assets']['sticker_2']
+                            responseembed = await discordembed.secondtextembed(f'{arrow} **Added new role : {role.name} ✅**\n{arrow} **Status : Success ✅**\n**Please check Direct Messages!**', 'Order Success')
+                            asyncio.create_task(ctx.respond(embed=responseembed))
                         except Exception as e:
-                            await ctx.respond("Check your direct messages!")
+                            arrow = assets['assets']['sticker_2']
+                            responseembed = await discordembed.secondtextembed(f'{arrow} **Added new role : ❌**\n{arrow} **Status : Success ✅**\n**Please check Direct Messages!**', 'Order Success')
+                            asyncio.create_task(ctx.respond(embed=responseembed))
                         channelid = await mongo.getchannelhistory()
                         if channelid['status'] == 200:
                             guild = ctx.guild
                             channel = guild.get_channel(int(channelid['data']))
-                            await channel.send(embed=embed)
+                            asyncio.create_task(channel.send(embed=embed))
                         else:
                             pass
                     else:
-                        await mongo.setorderstate('False')
+
                         await ctx.respond(removebalance)
                 else:
-                    await mongo.setorderstate('False')
                     await ctx.respond(request['message'])
             elif isOrder['status'] == 400:
                 await ctx.respond(isOrder['message'])

@@ -328,16 +328,16 @@ async def takestock(productId: str, amount: int):
     elif len(data.get('stock')) < amount:
         return {'status': 400, 'message': 'Insufficient amount of product'}
     elif len(data.get('stock')) >= amount:
-        message = ''
-        for i in range(amount):
-            message = message + data.get('stock').pop(0) + '\n'
+        stockarray = data['stock']
+        orderarray = stockarray[:amount]
+        del stockarray[:amount]
         update = {
                 "$set": {
-                    "stock": data.get('stock')
+                    "stock": stockarray
                 }
             }
         stock.update_one({'productId': productId}, update)
-        return {'status': 200, 'message': message}
+        return {'status': 200, 'data': orderarray}
     else:
         return {'status': 400, 'message': 'Internal server error!'}
     

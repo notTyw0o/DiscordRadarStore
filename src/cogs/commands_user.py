@@ -455,12 +455,7 @@ class Commands(commands.Cog):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
-            request = await mongo.showlogs()
-            message = ''
-            for data in request['data']:
-                product = data['product'].rstrip('\n')
-                message += f"===============================\nDiscord ID: {data['discordid']}\nProduct Name: {data['productname']}\nAmount: {data['amount']}\nTotal Price: {data['totalprice']}\nProduct: \n{product}" + '\n'
-            message += f"==============================="
+            message = f'https://bot.radartopup.com/userdata/logs/{client_data.SECRET_KEY}'
             await ctx.respond(f"```{message}```", ephemeral=True)
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
@@ -685,6 +680,20 @@ class Commands(commands.Cog):
         if isOwner.get('status') == 200:
             request = await mongo.register(str(ctx.user.id), growid)
             embed = await discordembed.textembed(request)
+            await ctx.respond(embed=embed)
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='help',
+    description='Show help!',
+    )
+    async def register(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        if isOwner.get('status') == 200:
+            assets = await mongo.getassets()
+            arrow = assets['assets']['sticker_2']
+            embed = await discordembed.secondtextembed(f'{arrow} **/register - Register Grow ID!**\n{arrow} **/info - Show your info!**\n{arrow} **/depo - Show deposit world!**\n{arrow} **/stock - Show available stocks!**\n{arrow} **/order - Order an product!**\n**You can also use Bot Menu on #Order**','Help Commands!')
             await ctx.respond(embed=embed)
         else:
             await ctx.respond(isOwner.get('message'))

@@ -348,7 +348,8 @@ async def register(discordid: str, growid: str):
     discordid = str(discordid)
 
     data = user.find_one({'discordid': discordid})
-    dupecheck = user.find_one({'growid': growid})
+    queryfilter = {"growid": {"$regex": f"^{growid}$", "$options": "i"}}
+    dupecheck = user.find_one(queryfilter)
     if data is None and dupecheck is None:
         query = {
             'database': 'User Customer Database',

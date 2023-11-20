@@ -260,7 +260,13 @@ class Commands(commands.Cog):
             else:
                 request = await mongo.takestock(productid, amount)
                 if request.get('status') == 200:
-                    await user.send(request.get('message'))
+                    msg = ""
+                    for text in request['data']:
+                    	msg += text + "\n"
+                    files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(ctx.author.id))
+                    file = discord.File(f'/home/Radar/txtfiles/{str(ctx.author.id)}.txt')
+                    await ctx.author.send(file=file)
+                    await util_function.delete_text_file(str(ctx.author.id))
                     await ctx.respond('Check DM' + "'" + 's!')
                 else:
                     await ctx.respond(request.get('message'))

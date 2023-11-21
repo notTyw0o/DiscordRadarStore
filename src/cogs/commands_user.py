@@ -262,7 +262,7 @@ class Commands(commands.Cog):
                 if request.get('status') == 200:
                     msg = ""
                     for text in request['data']:
-                    	msg += text + "\n"
+                        msg += text + "\n"
                     files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(ctx.author.id))
                     file = discord.File(f'/home/Radar/txtfiles/{str(ctx.author.id)}.txt')
                     await ctx.author.send(file=file)

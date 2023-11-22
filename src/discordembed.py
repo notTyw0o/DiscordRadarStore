@@ -30,8 +30,8 @@ async def showembed(listassets, assets, footer):
 
     for data in listassets:
         embed.add_field(
-            name=f"**Assets Code: {data.get('code')}**",
-            value=f"{data.get('value')}", inline=True
+            name=f"**Assets Code: \n{data.get('code')}**",
+            value=f"{data.get('value')}", inline=False
             )
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
@@ -62,6 +62,8 @@ async def checkstockembed(listassets, assets, footer):
     money = assets.get('sticker_3')
     worldlock = assets.get('sticker_4')
     crown = assets.get('sticker_5')
+    line = assets.get('sticker_6')
+    line = f'{line}{line}{line}{line}{line}{line}{line}{line}{line}{line}'
     embed = discord.Embed(
         title="",
         description="",
@@ -70,8 +72,8 @@ async def checkstockembed(listassets, assets, footer):
     for data in listassets['data']:
         embed.add_field(
         name=f"{crown} **{data['productName']}**",
-        value=f"{arrow} Code : {data['productId']}\n{arrow} Price : {data['productPrice']} {worldlock}\n{arrow} Stock : {data['totalstock']}", inline=True)
-    
+        value=f"{arrow} Code : {data['productId']}\n{arrow} Price : {data['productPrice']} {worldlock}\n{arrow} Stock : {data['totalstock']}\n {line}", inline=False)
+    embed.add_field(name=f"{siren} **HOW TO BUY** {siren}", value=f"{arrow} **Click this Menu below**\n{arrow} **Click on 'Register Grow ID'**\n{arrow} **Click on 'Deposit Information'**\n{arrow} **Go drop Worldlock to the deposit world**\n{arrow} **Click 'User Information' to check balance**\n{arrow} **Then click on 'Order Product'**")
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
     return embed

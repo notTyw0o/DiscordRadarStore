@@ -4,6 +4,7 @@ import discordembed
 import util_function
 import client_data
 import asyncio
+import hotmailbox
 
 bot = discord.Bot()
 
@@ -100,6 +101,110 @@ class Order(discord.ui.Modal):
             await interaction.response.send_message(isState['message'], ephemeral=True)
         elif userBalance < totalprice:
             await interaction.response.send_message(f'Insufficient balance!', ephemeral=True)
+
+class OrderEmail(discord.ui.Modal):
+    def __init__(self, bot, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.bot = bot
+        
+
+        self.add_item(discord.ui.InputText(label="Product Code"))
+        self.add_item(discord.ui.InputText(label="Amount"))
+
+    async def callback(self, interaction: discord.Interaction):
+        userBalance = await mongo.info(str(interaction.user.id))
+        if userBalance['status'] == 400:
+            embed = await discordembed.textembed(userBalance['message'])
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        codedata = [
+            {'code': 1, 'productcode': 'HOTMAIL', 'minorder': 1, 'price': 1},
+            {'code': 2, 'productcode': 'OUTLOOK', 'minorder': 1, 'price': 1},
+            {'code': 3, 'productcode': 'HOTMAIL.TRUSTED', 'minorder': 10, 'price': 7},
+            {'code': 4, 'productcode': 'OUTLOOK.TRUSTED', 'minorder': 10, 'price': 7},
+            {'code': 5, 'productcode': 'HOTMAIL.PVA', 'minorder': 10, 'price': 10},
+            {'code': 6, 'productcode': 'OUTLOOK.PVA', 'minorder': 10, 'price': 10},
+        ]
+
+        selectedproduct = []
+        for codes in codedata:
+            if codes['code'] == int(self.children[0].value):
+                selectedproduct.append(codes)
+
+        if len(selectedproduct) == 0:
+            embed = await discordembed.textembed('Product code is not valid!')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        elif int(self.children[1].value) < selectedproduct[0]['minorder']:
+            embed = await discordembed.textembed(f'Does not meet the minimum order requirement!')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        balance = userBalance['worldlock']['balance']
+        totalprice = selectedproduct[0]['price']*int(self.children[1].value)
+        if balance < totalprice:
+            embed = await discordembed.textembed(f'Insufficient balance!')
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        request = await hotmailbox.order(selectedproduct[0]['productcode'], int(self.children[1].value), totalprice)
+        if request['status'] == 400:
+            embed = await discordembed.textembed(request['message'])
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+        
+        await mongo.give(str(interaction.user.id), 'worldlock', -totalprice)
+
+        try:
+            footer = {'name': interaction.user.name,'time': await util_function.timenow(), 'avatar': interaction.user.avatar.url}
+        except:
+            footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+       
+        data = {'productName': request['data']['Product'], 'amount': request['data']['Quantity'], 'totalprice': totalprice}
+        assets = await mongo.getassets()
+        embed = await discordembed.orderembed(data, assets['assets'], footer, str(interaction.user.id))
+
+        msg = ""
+        for messages in request['data']['Emails']:
+            msg += f'{messages["Email"]}:{messages["Password"]}\n'
+
+        files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(interaction.user.id))
+        file = discord.File(f'/home/Radar/txtfiles/{str(interaction.user.id)}.txt')
+
+        userlogs = {
+            'discordid': str(interaction.user.id), 
+            'productname': request['data']['Product'],
+            'amount': str(request['data']['Quantity']),
+            'totalprice': totalprice,
+            'product': request['data']['Emails']
+            }
+        
+        user = interaction.user
+        guild = interaction.guild
+
+        asyncio.create_task(mongo.addlogs(userlogs))
+        asyncio.create_task(user.send(file=file))
+        asyncio.create_task(user.send(embed=embed))
+        asyncio.create_task(util_function.delete_text_file(str(interaction.user.id)))
+
+        try:
+            role = discord.utils.get(guild.roles, id=1176753211101687899)
+            member = guild.get_member(user.id)
+            await member.add_roles(role)
+            arrow = assets['assets']['sticker_2']
+            responseembed = await discordembed.secondtextembed(f'{arrow} **Added new role : {role.name} ✅**\n{arrow} **Status : Success ✅**\n**Please check Direct Messages!**', 'Order Success')
+            asyncio.create_task(interaction.response.send_message(embed=responseembed, ephemeral=True))
+        except Exception as e:
+            arrow = assets['assets']['sticker_2']
+            responseembed = await discordembed.secondtextembed(f'{arrow} **Added new role : ❌**\n{arrow} **Status : Success ✅**\n**Please check Direct Messages!**', 'Order Success')
+            asyncio.create_task(interaction.response.send_message(embed=responseembed, ephemeral=True))
+        channelid = await mongo.getchannelhistory()
+        if channelid['status'] == 200:
+            channel = guild.get_channel(int(channelid['data']))
+            asyncio.create_task(channel.send(embed=embed))
+        else:
+            pass
     
 class RegisterLicense(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:

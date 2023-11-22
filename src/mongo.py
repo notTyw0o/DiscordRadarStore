@@ -402,12 +402,25 @@ async def addtemplate():
             'sticker_2': '<a:arrow4:1167148754772693012>',
             'sticker_3': '<:money1:1167148958053838949>',
             'sticker_4': '<:wl:1167146128622506134>',
-            'sticker_5': '<a:darkbluecrown:1167155192773488710>'
+            'sticker_5': '<a:darkbluecrown:1167155192773488710>',
+            'sticket_6': '<a:GlowingPurpleLine:1176727267846672445>'
         }
         assets.insert_one(query)
         return f'Success added template to databases!'
     else:
-        return f'Template already exist in databases!'
+        assets.delete_one({'database': 'User Assets'})
+        query = {
+            'database': 'User Assets',
+            'bannerurl': 'https://cdn.discordapp.com/attachments/1166767160878698628/1167104315261980743/standard.gif?ex=654ce998&is=653a7498&hm=a82e5dab07f1cd87999964cee579bec1e1b43c69257336ba15b7d3bdd0852bcb&',
+            'sticker_1': '<a:Siren:1167137117453959270> ',
+            'sticker_2': '<a:arrow4:1167148754772693012>',
+            'sticker_3': '<:money1:1167148958053838949>',
+            'sticker_4': '<:wl:1167146128622506134>',
+            'sticker_5': '<a:darkbluecrown:1167155192773488710>',
+            'sticker_6': '<a:GlowingPurpleLine:1176727267846672445>'
+        }
+        assets.insert_one(query)
+        return f'Success replace assets!'
     
 async def changeassets(assetsid: str, value: str):
     db = client[f'user_{client_data.SECRET_KEY}']
@@ -443,7 +456,8 @@ async def getassets():
                 'sticker_2': data.get('sticker_2'),
                 'sticker_3': data.get('sticker_3'),
                 'sticker_4': data.get('sticker_4'),
-                'sticker_5': data.get('sticker_5')
+                'sticker_5': data.get('sticker_5'),
+                'sticker_6': data.get('sticker_6')
             }
         }
 async def showassets():
@@ -478,6 +492,10 @@ async def showassets():
             {
                 'code': 'sticker_5',
                 'value': data.get('sticker_5')
+            },
+            {
+                'code': 'sticker_6',
+                'value': data.get('sticker_6')
             },
         ]}
     

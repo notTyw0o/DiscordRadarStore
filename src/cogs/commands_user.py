@@ -276,26 +276,6 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
-    name='deploy',
-    description='Deploy user command!',
-    )
-    async def deploy(self, ctx):
-        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
-        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
-        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
-            try:
-                footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
-            except:
-                footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-            embed = await discordembed.deploy(footer)
-            await ctx.respond('Success!', ephemeral=True)
-            await ctx.send(embed=embed, view=menu.MainView(timeout=None))
-        elif isAuthor.get('status') == 400:
-            await ctx.respond(isAuthor.get('message'))
-        else:
-            await ctx.respond(isOwner.get('message'))
-
-    @commands.slash_command(
     name='give',
     description='Give balance to user ID!',
     )
@@ -389,10 +369,10 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @tasks.loop(seconds=5.0)
-    async def runlivestock(self, ctx):
+    async def runlivestock(self, ctx, template):
         if self.last_message:  # If there's a previous message
             request = await mongo.checkstock()
-            template = await mongo.getassets()
+            template = template
             if request.get('status') == 200 and template.get('status') == 200:
                 try:
                     footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
@@ -408,30 +388,30 @@ class Commands(commands.Cog):
                     last_message = None
                 
                 if last_message:
-                    await last_message.edit(embed=embed)
+                    await last_message.edit(embed=embed, view=menu.MainView(timeout=None))
                 else:
-                    self.last_message = await ctx.send(embed=embed)
+                    self.last_message = await ctx.send(embed=embed, view=menu.MainView(timeout=None))
         else:
             request = await mongo.checkstock()
-            template = await mongo.getassets()
+            template = template
             if request.get('status') == 200 and template.get('status') == 200:
                 try:
                     footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
                 except:
                     footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                 embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
-                self.last_message = await ctx.send(embed=embed)
+                self.last_message = await ctx.send(embed=embed, view=menu.MainView(timeout=None))
 
     @commands.slash_command(
-    name='startlivestock',
-    description='Start livestock info!',
+    name='deploy',
+    description='Deploy livestock and menu!',
     )
-    async def startlivestock(self, ctx):
+    async def deploy(self, ctx):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
             self.ctx = ctx
-            self.runlivestock.start(ctx)
+            self.runlivestock.start(ctx, await mongo.getassets())
             await ctx.respond('Livestock deployed!', ephemeral=True)
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
@@ -439,10 +419,10 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
-    name='stoplivestock',
-    description='Stop livestock info!',
+    name='stopdeploy',
+    description='Stop deploy info!',
     )
-    async def stoplivestock(self, ctx):
+    async def stopdeploy(self, ctx):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:

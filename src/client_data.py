@@ -20,6 +20,7 @@ try:
     TOKEN = data['data']['discordtoken']
     OWNER_ID = data['data']['discordid']
     PRESENCE = data['data']['presence']
+    HOTMAIL_API = os.getenv('HOTMAIL_API')
 except:
     print(response.json())
     sys.exit()

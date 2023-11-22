@@ -35,10 +35,6 @@ class MainView(discord.ui.View):
                 label="Order Product",
                 description="Order an product!"
             ),
-            discord.SelectOption(
-                label="Check Stock",
-                description="Check available stock on store!"
-            )
         ]
     )
     async def select_callback(self, select, interaction):
@@ -80,26 +76,12 @@ class MainView(discord.ui.View):
                     await interaction.response.send_message(template.get('message'), ephemeral=True)
             elif selectedvalues == "Order Product":
                 await interaction.response.send_modal(modal.Order(bot, title=select.values[0]))
-            elif selectedvalues == "Check Stock":
-                request = await mongo.checkstock()
-                template = await mongo.getassets()
-                if request.get('status') == 200 and template.get('status') == 200:
-                    try:
-                        footer = {'name': interaction.user.name,'time': await util_function.timenow(), 'avatar': interaction.user.avatar.url}
-                    except:
-                        footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                    embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
-                    await interaction.response.send_message(embed=embed, view=discord_button.OrderButton(timeout=None),  ephemeral=True)
-                elif request.get('status') == 400:
-                    await interaction.response.send_message(request.get('message'), ephemeral=True)
-                elif template.get('status') == 400:
-                    await interaction.response.send_message(template.get('message'), ephemeral=True)
             else:
                 await interaction.response.send_message('Not yet set!', ephemeral=True)
         else:
             await interaction.response.send_message(isActive['message'], ephemeral=True)
 
-class Deposit(discord.ui.View):
+class MainViewEmail(discord.ui.View):
     @discord.ui.select(
         placeholder = "Hello, choose command here!",
         min_values = 1,
@@ -121,6 +103,10 @@ class Deposit(discord.ui.View):
                 label="Deposit Information",
                 description="Get deposit information!"
             ),
+            discord.SelectOption(
+                label="Order Product",
+                description="Order an product!"
+            ),
         ]
     )
     async def select_callback(self, select, interaction):
@@ -160,58 +146,12 @@ class Deposit(discord.ui.View):
                     await interaction.response.send_message(request.get('message'), ephemeral=True)
                 elif template.get('status') == 400:
                     await interaction.response.send_message(template.get('message'), ephemeral=True)
-            else:
-                await interaction.response.send_message('Not yet set!', ephemeral=True)
-        else:
-            await interaction.response.send_message(isActive['message'], ephemeral=True)
-
-class GrowtopiaStuff(discord.ui.View):
-    @discord.ui.select(
-        placeholder = "Hello, choose command here!",
-        min_values = 1,
-        max_values = 1,
-        options = [
-            discord.SelectOption(
-                label="None",
-                description="None"
-            ),
-            discord.SelectOption(
-                label="Order Product",
-                description="Order an product!"
-            ),
-            discord.SelectOption(
-                label="Check Stock",
-                description="Check available stock on store!"
-            )
-        ]
-    )
-    async def select_callback(self, select, interaction):
-        isActive = await mongo.checkOwner(client_data.SECRET_KEY)
-        selectedvalues = select.values[0]
-        if isActive['status'] == 200:
-            if selectedvalues == "None":
-                await interaction.response.send_message('Nothing!', ephemeral=True)
             elif selectedvalues == "Order Product":
-                await interaction.response.send_modal(modal.Order(bot, title=select.values[0]))
-            elif selectedvalues == "Check Stock":
-                request = await mongo.checkstock()
-                template = await mongo.getassets()
-                if request.get('status') == 200 and template.get('status') == 200:
-                    try:
-                        footer = {'name': interaction.user.name,'time': await util_function.timenow(), 'avatar': interaction.user.avatar.url}
-                    except:
-                        footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                    embed = await discordembed.checkstockembed(request, template.get('assets'), footer)
-                    await interaction.response.send_message(embed=embed, view=discord_button.OrderButton(timeout=None),  ephemeral=True)
-                elif request.get('status') == 400:
-                    await interaction.response.send_message(request.get('message'), ephemeral=True)
-                elif template.get('status') == 400:
-                    await interaction.response.send_message(template.get('message'), ephemeral=True)
+                await interaction.response.send_modal(modal.OrderEmail(bot, title=select.values[0]))
             else:
                 await interaction.response.send_message('Not yet set!', ephemeral=True)
         else:
             await interaction.response.send_message(isActive['message'], ephemeral=True)
-
 
 class License(discord.ui.View):
     @discord.ui.select(

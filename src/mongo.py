@@ -429,7 +429,7 @@ async def changeassets(assetsid: str, value: str):
     data = assets.find_one({'database': 'User Assets'})
     if data is None:
         return f'Assets not found!'
-    elif assetsid in ['bannerurl', 'sticker_1', 'sticker_2', 'sticker_3', 'sticker_4', 'sticker_5']:
+    elif assetsid in ['bannerurl', 'sticker_1', 'sticker_2', 'sticker_3', 'sticker_4', 'sticker_5', 'sticker_6']:
         update = {
                 "$set": {
                     assetsid: value

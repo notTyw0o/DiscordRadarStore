@@ -47,39 +47,6 @@ class CommandsAdmin(commands.Cog):
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
 
-    @commands.slash_command(
-    name='deploydeposit',
-    description='Deploy user command!',
-    )
-    async def deploydeposit(self, ctx):
-        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
-        if isAuthor.get('status') == 200:
-            try:
-                footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
-            except:
-                footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-            await ctx.respond('Success!', ephemeral=True)
-            embed = await discordembed.deploylicense(footer)
-            await ctx.send(embed=embed, view=menu.Deposit(timeout=None))
-        elif isAuthor.get('status') == 400:
-            await ctx.respond(isAuthor.get('message'))
-
-    @commands.slash_command(
-    name='deploygrowtopia',
-    description='Deploy user command!',
-    )
-    async def deploygrowtopia(self, ctx):
-        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
-        if isAuthor.get('status') == 200:
-            try:
-                footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
-            except:
-                footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-            await ctx.respond('Success!', ephemeral=True)
-            embed = await discordembed.deploylicense(footer)
-            await ctx.send(embed=embed, view=menu.GrowtopiaStuff(timeout=None))
-        elif isAuthor.get('status') == 400:
-            await ctx.respond(isAuthor.get('message'))
 
     @commands.slash_command(
     name='addproductlisen',
@@ -129,28 +96,6 @@ class CommandsAdmin(commands.Cog):
                 embed = await discordembed.textembed(f"Balance : {request['data']['BalanceUsd']} USD")
             else:
                 embed = await discordembed.textembed(request['message'])
-            await ctx.respond(embed=embed)
-        elif isAuthor.get('status') == 400:
-            await ctx.respond(isAuthor.get('message'))
-
-    @commands.slash_command(
-    name='stockemail',
-    description='Check email stock!',
-    )
-    async def stockemail(self, ctx):
-        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
-        if isAuthor.get('status') == 200:
-            request = await hotmailbox.getstockemail()
-            if request['status'] == 200:
-                assets = await mongo.getassets()
-                try:
-                    footer = {'name': ctx.user.name,'time': await util_function.timenow(), 'avatar': ctx.user.avatar.url}
-                except:
-                    footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
-                embed = await discordembed.checkstockembed(request, assets['assets'], footer)
-            else:
-                embed = await discordembed.textembed(request['message'])
-            print(len(request['data']))
             await ctx.respond(embed=embed)
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))

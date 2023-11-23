@@ -730,7 +730,7 @@ class Commands(commands.Cog):
                 isOrder['productdata']['amount'] = int(amount)
                 isOrder['productdata']['totalprice'] = totalprice
             except:
-                await ctx.respond('Insufficient stock!')
+                await ctx.respond(isOrder['message'])
                 return
 
             if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:

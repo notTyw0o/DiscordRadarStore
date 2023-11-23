@@ -28,17 +28,22 @@ class Order(discord.ui.Modal):
         self.add_item(discord.ui.InputText(label="Amount"))
 
     async def callback(self, interaction: discord.Interaction):
+        try:
+            int(self.children[1].value)
+        except:
+            embed = await discordembed.textembed('Amount must be an integer!')
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
+        
         isOrder = await mongo.isOrder(self.children[0].value, int(self.children[1].value))
         isState = await mongo.checkstate()
         userBalance = await mongo.info(str(interaction.user.id))
-
         try:
             userBalance = userBalance['worldlock']['balance']
             totalprice = int(self.children[1].value) * int(isOrder['productdata']['productPrice'])
             isOrder['productdata']['amount'] = int(self.children[1].value)
             isOrder['productdata']['totalprice'] = totalprice
         except:
-            await interaction.response.send_message('Insufficient stock!', ephemeral=True)
+            await interaction.response.send_message(isOrder['message'], ephemeral=True)
             return
 
         if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:

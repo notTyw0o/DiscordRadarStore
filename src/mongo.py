@@ -5,6 +5,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import client_data
 import util_function
+import re
 
 uri = f'mongodb+srv://{os.getenv("MONGO_USER")}:{os.getenv("MONGO_PASSWORD")}@discordbotdatabase.bpx5wpk.mongodb.net/?retryWrites=true&w=majority'
 
@@ -585,7 +586,7 @@ async def checktotalstock(productid: str):
     data = stock.find_one({'productId': productid})
     totalstock = 0
     if data is None:
-        pass
+        totalstock = 'Not Found'
     else:
         totalstock = int(len(data.get('stock')))
     return totalstock
@@ -639,6 +640,14 @@ async def isOrder(productid: str, amount: int):
     stockcheck = await checktotalstock(productid)
     if productdata is None:
         return {'status': 400, 'message': 'Product not been set!'}
+    elif stockcheck == 'Not Found':
+        return {'status': 400, 'message': 'Product code is invalid!'}
+    elif "-" in str(amount):
+        return {'status': 400, 'message': 'Amount cannot contain "-"!'}
+    elif amount == 0:
+        return {'status': 400, 'message': 'Amount cannot be zero!'}
+    elif stockcheck < amount:
+        return {'status': 400, 'message': 'Insufficient stock!'}
     elif productdata is not None and stockcheck >= amount:
         array = productdata.get('productlist')
         count = 0
@@ -651,12 +660,9 @@ async def isOrder(productid: str, amount: int):
                 break
             else:
                 pass
-        if count == 0:
-            return {'status': 400, 'message': 'Product code is invalid'}
-        else:
-            return {'status': 200, 'message': 'Processing order..\n Bot will sent product via Direct Messages!', 'productdata': object}
+        return {'status': 200, 'message': 'Processing order..\n Bot will sent product via Direct Messages!', 'productdata': object}
     else:
-        return {'status': 400, 'message': 'Insufficient Stock!'}
+        return {'status': 400, 'message': 'Internal server error!'}
 
 async def isOrderlisen(productid: str, amount: int):
     db = client[f'user_{client_data.SECRET_KEY}']

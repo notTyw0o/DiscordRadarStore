@@ -13,6 +13,10 @@ if client_data.SECRET_KEY == 'fc8af3e8ecf73bbd83597682037925d7':
     bot.load_extension('cogs.commands_user')
 else:
     bot.load_extension('cogs.commands_user')
+    try:
+        bot.load_extension(f'cogs.{client_data.SECRET_KEY}')
+    except:
+        pass
 
 @bot.event
 async def on_ready():

@@ -7,6 +7,7 @@ import client_data
 import discordembed
 import discord_menu as menu
 import asyncio
+import discord_function
 
 class Commands(commands.Cog):
     def __init__(self, bot):
@@ -588,6 +589,56 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
+    name='update',
+    description='Update database to be ready for leaderboard!',
+    )
+    async def update(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.upgrade()
+            embed = await discordembed.textembed(request['message'])
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='leaderboard',
+    description='Show leaderboard!',
+    )
+    async def leaderboard(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.gettopten()
+            if request['status'] == 400:
+                
+                embed = await discordembed.textembed(request['message'])
+                await ctx.respond(embed=embed)
+                return
+            assets = await mongo.getassets()
+            assets = assets['assets']
+            siren = assets.get('sticker_1')
+            arrow = assets.get('sticker_2')
+            money = assets.get('sticker_3')
+            worldlock = assets.get('sticker_4')
+            crown = assets.get('sticker_5')
+            medal = ['🥇', '🥈', '🥉','🏅','🏅','🏅','🏅','🏅','🏅','🏅']
+            msg = ""
+            for index, text in enumerate(request['data']):
+                number = index + 1
+                msg += f'{number} - {medal[index]} <@{text["discordid"]}>\n'
+            print(request['data'])
+            embed = await discordembed.secondtextembed(msg,'Loyal Customer Leaderboard')
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
     name='addrole',
     description='Register or change registered information!',
     )
@@ -695,10 +746,7 @@ class Commands(commands.Cog):
             request = await mongo.info(userid)
             template = await mongo.getassets()
             if request.get('status') == 200 and template.get('status') == 200:
-                try:
-                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
-                except:
-                    footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
+                footer = await discord_function.create_footer(ctx)
                 embed = await discordembed.infoembed(request, template.get('assets'), footer)
                 await ctx.respond(embed=embed)
             elif request.get('status') == 400:
@@ -730,7 +778,8 @@ class Commands(commands.Cog):
                 isOrder['productdata']['amount'] = int(amount)
                 isOrder['productdata']['totalprice'] = totalprice
             except:
-                await ctx.respond(isOrder['message'])
+                embed = await discordembed.textembed(isOrder['message'])
+                await ctx.respond(embed=embed)
                 return
 
             if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:
@@ -754,6 +803,7 @@ class Commands(commands.Cog):
                         asyncio.create_task(ctx.author.send(file=file))
                         asyncio.create_task(ctx.author.send(embed=embed))
                         asyncio.create_task(util_function.delete_text_file(str(ctx.author.id)))
+                        asyncio.create_task(mongo.addtotalspend(str(ctx.author.id), float(isOrder['productdata']['totalprice'])))
                         userlogs = {
                             'discordid': str(ctx.author.id), 
                             'productname': isOrder['productdata']['productName'],

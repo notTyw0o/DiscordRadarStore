@@ -15,7 +15,7 @@ async def infoembed(field, assets, footer):
     )
     embed.add_field(
         name=f"{siren} **User Information** {siren}",
-        value=f"{crown} **Registered GrowID** :\n{arrow} {field.get('growid')}\n{crown} **Your balance :** \n{arrow} {field.get('worldlock').get('balance')} {worldlock}\n{assets.get('sticker_2')} {util_function.rupiah_format(field.get('rupiah').get('balance'))} {money}", inline=True
+        value=f"{crown} **Registered GrowID** :\n{arrow} {field.get('growid')}\n{crown} **Your balance :** \n{arrow} {field.get('worldlock').get('balance')} {worldlock}\n{assets.get('sticker_2')} {util_function.rupiah_format(field.get('rupiah').get('balance'))} {money}\n{crown} **Total Spend:**\n{arrow} {field['totalspend']['worldlock']}", inline=True
         )
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))

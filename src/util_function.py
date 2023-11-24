@@ -152,3 +152,9 @@ async def delete_text_file(textname):
     except OSError as e:
         print(f"Error: {e.filename} - {e.strerror}")
         return False
+    
+async def product_id_exists(arr, product_id):
+    for item in arr:
+        if 'productId' in item and item['productId'] == product_id:
+            return True  # Found the 'productid' named 'cid'
+    return False

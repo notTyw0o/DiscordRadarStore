@@ -43,7 +43,8 @@ class Order(discord.ui.Modal):
             isOrder['productdata']['amount'] = int(self.children[1].value)
             isOrder['productdata']['totalprice'] = totalprice
         except:
-            await interaction.response.send_message(isOrder['message'], ephemeral=True)
+            embed = await discordembed.textembed(isOrder['message'])
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         if isOrder['status'] == 200 and isState['status'] == 200 and userBalance >= totalprice:
@@ -69,6 +70,7 @@ class Order(discord.ui.Modal):
                     asyncio.create_task(user.send(file=file))
                     asyncio.create_task(user.send(embed=embed))
                     asyncio.create_task(util_function.delete_text_file(str(interaction.user.id)))
+                    asyncio.create_task(mongo.addtotalspend(str(interaction.user.id), float(isOrder['productdata']['totalprice'])))
                     userlogs = {
                         'discordid': str(interaction.user.id), 
                         'productname': isOrder['productdata']['productName'],

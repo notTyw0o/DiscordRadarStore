@@ -101,8 +101,6 @@ async def addProduct(productName: str, productId: str, productPrice: int, roleid
             collection.update_one({'database': 'User Product'}, update)
         return 'Product successfully added to databases!'
     except Exception as e:
-        error_message = str(e)
-        print(error_message)
         return f'Error occurred, Please contact support!'
 
 async def addProductLisen(productPrice: int, roleid):
@@ -386,7 +384,8 @@ async def info(discordid: str):
             'message': 'Success fetch data!',
             'growid': data.get('growid'),
             'worldlock': data.get('worldlock'),
-            'rupiah': data.get('rupiah')
+            'rupiah': data.get('rupiah'),
+            'totalspend': data['totalspend']
         }
     
 async def addtemplate():
@@ -394,7 +393,6 @@ async def addtemplate():
     assets = db[f'assets']
 
     data = assets.find_one({'database': 'User Assets'})
-    print()
     if data is None:
         query = {
             'database': 'User Assets',
@@ -586,7 +584,7 @@ async def checktotalstock(productid: str):
     data = stock.find_one({'productId': productid})
     totalstock = 0
     if data is None:
-        totalstock = 'Not Found'
+        totalstock = 0
     else:
         totalstock = int(len(data.get('stock')))
     return totalstock
@@ -640,9 +638,12 @@ async def isOrder(productid: str, amount: int):
     stockcheck = await checktotalstock(productid)
     if productdata is None:
         return {'status': 400, 'message': 'Product not been set!'}
-    elif stockcheck == 'Not Found':
-        return {'status': 400, 'message': 'Product code is invalid!'}
-    elif "-" in str(amount):
+    
+    productcheck = await util_function.product_id_exists(productdata['productlist'], productid)
+    if not productcheck:
+        return {'status': 400, 'message': 'Product ID is invalid!'}
+    
+    if "-" in str(amount):
         return {'status': 400, 'message': 'Amount cannot contain "-"!'}
     elif amount == 0:
         return {'status': 400, 'message': 'Amount cannot be zero!'}
@@ -650,16 +651,10 @@ async def isOrder(productid: str, amount: int):
         return {'status': 400, 'message': 'Insufficient stock!'}
     elif productdata is not None and stockcheck >= amount:
         array = productdata.get('productlist')
-        count = 0
-        price = 0
-        
         for data in array:
             if data['productId'] == productid:
-                count = count + 1
                 object = data
                 break
-            else:
-                pass
         return {'status': 200, 'message': 'Processing order..\n Bot will sent product via Direct Messages!', 'productdata': object}
     else:
         return {'status': 400, 'message': 'Internal server error!'}
@@ -1072,5 +1067,46 @@ async def addtotalbuy():
             }
         buy.update_one(filter, update)
         return newtotal
-
     
+async def upgrade():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+
+    data = user.find({})
+    if data is None:
+        return {'status': 400, 'message': 'Data does not exist!'}
+    else:
+        user.update_many({}, {"$set": {"totalspend": {'worldlock': 0, 'rupiah': 0}}})
+        return {'status': 200, 'message': 'Success update database!'}
+
+async def addtotalspend(discordid: str, amount: float):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+    
+    filter = {'discordid': str(discordid)}
+    data = user.find_one(filter)
+    update = {
+        "$set": {
+            "totalspend": {'worldlock': float(amount), 'rupiah': data['rupiah']}
+        }
+    }
+    user.update_one(filter, update)
+
+async def gettopten():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+
+    data = user.find_one({'database': 'User Customer Database'})
+    if data is None:
+        return {'status': 400, 'message': 'No user found in the databases!'}
+    try:
+        result = user.aggregate([
+            {"$sort": {"totalspend.worldlock": -1}},  # Sort by totalspend.worldlock descending
+            {"$limit": 10}  # Limit the results to 10 documents
+        ])
+        arr =  []
+        for document in result:
+            arr.append(document)
+        return {'status': 200, 'message': 'Success fetching top ten data!', 'data': arr}
+    except:
+        return {'status': 400, 'message': 'Error on fetching data, please try /upgrade and try again!'}

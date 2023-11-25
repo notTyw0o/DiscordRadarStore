@@ -26,8 +26,11 @@ async def isAuthor(received_id: str, owner_id: str):
         return response
     
 async def timenow():
-    current_time = datetime.now()
-    return current_time.strftime("%Y/%m/%d at %I:%M %p")
+    current_time_utc = datetime.utcnow()
+    gmt_offset = timedelta(hours=7)  # GMT+7 offset
+    current_time_gmt7 = current_time_utc + gmt_offset
+    formatted_time = current_time_gmt7.strftime("%Y/%m/%d at %I:%M %p")
+    return formatted_time
 
 def rupiah_format(angka, with_prefix=False, desimal=2):
     try:
@@ -158,3 +161,25 @@ async def product_id_exists(arr, product_id):
         if 'productId' in item and item['productId'] == product_id:
             return True  # Found the 'productid' named 'cid'
     return False
+
+async def format_number(num):
+    num_str = str(num)
+    if num_str.endswith('.0'):
+        return num_str[:-2]  # Removing the last two characters (.0)
+    else:
+        return num_str
+    
+async def convert_id(user_id):
+    return ''.join(filter(str.isdigit, user_id))
+
+async def add_hours(hours):
+    current_time = datetime.utcnow() + timedelta(hours=7)  # Adding 7 hours to convert to GMT+7
+    future_time = current_time + timedelta(hours=hours)
+    return future_time
+
+async def seconds_until_future_time(future_timestamp):
+    future_time = datetime.strptime(future_timestamp, "%Y-%m-%d %H:%M:%S.%f")
+    current_time = datetime.now()
+    time_difference = future_time - current_time
+    seconds_left = time_difference.total_seconds()
+    return max(0, seconds_left)

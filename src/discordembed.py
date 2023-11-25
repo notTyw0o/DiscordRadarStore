@@ -15,9 +15,9 @@ async def infoembed(field, assets, footer):
     )
     embed.add_field(
         name=f"{siren} **User Information** {siren}",
-        value=f"{crown} **Registered GrowID** :\n{arrow} {field.get('growid')}\n{crown} **Your balance :** \n{arrow} {field.get('worldlock').get('balance')} {worldlock}\n{assets.get('sticker_2')} {util_function.rupiah_format(field.get('rupiah').get('balance'))} {money}\n{crown} **Total Spend:**\n{arrow} {field['totalspend']['worldlock']}", inline=True
+        value=f"{crown} **Registered GrowID** :\n{arrow} {field.get('growid')}\n{crown} **Your balance :** \n{arrow} {await util_function.format_number(field.get('worldlock').get('balance'))} {worldlock}\n{assets.get('sticker_2')} {util_function.rupiah_format(field.get('rupiah').get('balance'))} {money}\n\n{crown} **Total Spend:**\n{arrow} {field['totalspend']['worldlock']}", inline=True
         )
-    embed.set_image(url=assets.get('bannerurl'))
+    embed.set_thumbnail(url=footer.get('avatar'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
     return embed
 
@@ -72,7 +72,7 @@ async def checkstockembed(listassets, assets, footer):
     for data in listassets['data']:
         embed.add_field(
         name=f"{crown} **{data['productName']}**",
-        value=f"{arrow} Code : {data['productId']}\n{arrow} Price : {data['productPrice']} {worldlock}\n{arrow} Stock : {data['totalstock']}\n {line}", inline=False)
+        value=f"{arrow} Code : {data['productId']}\n{arrow} Price : {await util_function.format_number(data['productPrice'])} {worldlock}\n{arrow} Stock : {data['totalstock']}\n {line}", inline=False)
     embed.add_field(name=f"{siren} **HOW TO BUY** {siren}", value=f"{arrow} **Click this Menu below**\n{arrow} **Click on 'Register Grow ID'**\n{arrow} **Click on 'Deposit Information'**\n{arrow} **Go drop Worldlock to the deposit world**\n{arrow} **Click 'User Information' to check balance**\n{arrow} **Then click on 'Order Product'**")
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))
@@ -95,7 +95,7 @@ async def orderembed(product, assets, footer, custdiscordid):
     )
     embed.add_field(
         name=f"{siren} **Order Success #{totalbuy}** {siren}",
-        value=f"{arrow} **Buyer : <@{custdiscordid}>**\n{arrow} **Product : {productName}**\n{arrow} **Total : {amount}**\n{arrow} **Total Price : {totalprice} {worldlock}**\n {siren} **Note : Give reps for warranty!**", inline=True
+        value=f"{arrow} **Buyer : <@{custdiscordid}>**\n{arrow} **Product : {productName}**\n{arrow} **Total : {amount}**\n{arrow} **Total Price : {await util_function.format_number(totalprice)} {worldlock}**\n {siren} **Note : Give reps for warranty!**", inline=True
         )
     embed.set_image(url=assets.get('bannerurl'))
     embed.set_footer(text=f"{footer.get('name')} | {footer.get('time')}", icon_url=footer.get('avatar'))

@@ -6,6 +6,7 @@ import util_function
 import client_data
 import discordembed
 import discord_menu as menu
+import discord_button
 import asyncio
 import discord_function
 
@@ -14,6 +15,7 @@ class Commands(commands.Cog):
         self.bot = bot
         self.ctx = None
         self.last_message = None
+        self.last_leaderboard = None
 
     @commands.slash_command(
         description='Check if bot is ready to use!',
@@ -281,6 +283,7 @@ class Commands(commands.Cog):
     description='Give balance to user ID!',
     )
     async def give(self, ctx, discordid: Option(str, 'Discord ID of the target!', required=True), type: Option(str, '"worldlock" or "rupiah"!', required=True), amount: Option(float, 'Amount balance!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
@@ -550,6 +553,7 @@ class Commands(commands.Cog):
     description='Check user information!',
     )
     async def checkuser(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
@@ -557,8 +561,9 @@ class Commands(commands.Cog):
             request = await mongo.info(userid)
             template = await mongo.getassets()
             if request.get('status') == 200 and template.get('status') == 200:
+                member = ctx.guild.get_member(int(discordid))
                 try:
-                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': ctx.author.avatar.url}
+                    footer = {'name': ctx.author.name,'time': await util_function.timenow(), 'avatar': member.avatar.url}
                 except:
                     footer = {'name': ctx.author.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                 embed = await discordembed.infoembed(request, template.get('assets'), footer)
@@ -577,6 +582,7 @@ class Commands(commands.Cog):
     description='Register or change registered information!',
     )
     async def setuser(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), growid: Option(str, 'New Grow ID!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
@@ -589,6 +595,124 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
+    name='ban',
+    description='Ban selected user!',
+    )
+    async def ban(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), reason: Option(str, 'Ban reason!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        guild = ctx.guild
+        member = guild.get_member(int(discordid))
+
+        if member is None:
+            await ctx.respond(embed = await discordembed.textembed(f'User not found!'))
+            return
+        
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            await member.send(embed=await discordembed.textembed(f'You been banned on {ctx.guild.name}, reason: "{reason}"'))
+            await member.ban(reason=reason)  # Add a reason if needed
+            embed = await discordembed.secondtextembed(f'**Success ban <@{discordid}> from server, reason: "{reason}"**', 'Alert')
+            await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='warn',
+    description='Warn target user id!',
+    )
+    async def warn(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), reason: Option(str, 'Warn reason!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        guild = ctx.guild
+        member = guild.get_member(int(discordid))
+
+        if member is None:
+            await ctx.respond(embed = await discordembed.textembed(f'User not found!'))
+            return
+        
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            await member.send(embed=await discordembed.textembed(f'You been warned from {ctx.guild.name} server, reason: "{reason}"'))
+            embed = await discordembed.secondtextembed(f'**Success warn <@{discordid}>, reason: "{reason}"**', 'Alert')
+            await ctx.respond(embed=embed, ephemeral=True)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='setmute',
+    description='Set mute role!',
+    )
+    async def setmute(self, ctx, roleid: Option(str, 'Target Discord ID!', required=True)):
+        roleid = await util_function.convert_id(str(roleid))
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.addmuterole(roleid, ctx.guild.id)
+            await ctx.respond(embed= await discordembed.textembed(request['message']))
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='mute',
+    description='Mute target user id!',
+    )
+    async def mute(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), expired: Option(int, 'Mute duration in hours!', required=True), reason: Option(str, 'Mute duration in hours!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        checkrole = await mongo.getmuterole()
+
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            if checkrole['status'] == 400:
+                await ctx.respond(embed= await discordembed.textembed(checkrole['message']))
+                return
+
+            if expired <= 0:
+                await ctx.respond(embed= await discordembed.textembed(f"Can't be zero or below zero!"))
+                return
+            
+            if expired > 3:
+                await ctx.respond(embed= await discordembed.textembed(f"Can't mute more than 3 hour!"))
+                return
+            
+            member = ctx.guild.get_member(int(discordid))
+            role = ctx.guild.get_role(int(checkrole['data']))
+
+            if member == None:
+                await ctx.respond(embed=await discordembed.textembed(f'User does not exist in this server!'))
+                return
+            
+            if role == None:
+                await ctx.respond(embed=await discordembed.textembed(f'User does not exist in this server!'))
+                return
+            
+            expireddate = await util_function.add_hours(expired)
+            request = await mongo.addmuteuser(discordid, expireddate, reason)
+            if request['status'] == 400:
+                await ctx.respond(embed=await discordembed.textembed(request['message']))
+                return
+
+            
+            await member.add_roles(role)
+            asyncio.create_task(discord_function.mute_task(ctx.guild, discordid, expired))
+            asyncio.create_task(ctx.respond(embed=await discordembed.secondtextembed(f'<@{discordid}> been muted for {expired} hours, reason: {reason}', 'Alert')))
+            asyncio.create_task(member.send(embed=await discordembed.textembed(f'You have been muted for {expired} hours, reason: {reason}')))
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    
+
+    @commands.slash_command(
     name='update',
     description='Update database to be ready for leaderboard!',
     )
@@ -599,6 +723,23 @@ class Commands(commands.Cog):
             request = await mongo.upgrade()
             embed = await discordembed.textembed(request['message'])
             await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='deployverif',
+    description='Deploy verification panel!',
+    )
+    async def deployverif(self, ctx, roleid: Option(str, 'Verification role!', required=True)):
+        roleid = await util_function.convert_id(str(roleid))
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.upgrade()
+            embed = await discordembed.textembed(f'Please click this button below for a verification!')
+            await ctx.respond(embed=embed, view=discord_button.Verification(timeout=None, role_id=int(roleid)))
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
@@ -625,14 +766,112 @@ class Commands(commands.Cog):
             money = assets.get('sticker_3')
             worldlock = assets.get('sticker_4')
             crown = assets.get('sticker_5')
-            medal = ['🥇', '🥈', '🥉','🏅','🏅','🏅','🏅','🏅','🏅','🏅']
-            msg = ""
+            medal = ['🥇', '🥈', '🥉','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅']
+            msg = f"Rank--Medal--User--Total Spend\n"
             for index, text in enumerate(request['data']):
                 number = index + 1
-                msg += f'{number} - {medal[index]} <@{text["discordid"]}>\n'
-            print(request['data'])
+                msg += f'#{number} {medal[index]} <@{text["discordid"]}> {await util_function.format_number(text["totalspend"]["worldlock"])} {worldlock}\n'
+            
             embed = await discordembed.secondtextembed(msg,'Loyal Customer Leaderboard')
             await ctx.respond(embed=embed)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @tasks.loop(seconds=5.0)
+    async def runleaderboard(self, ctx, template):
+        if self.last_leaderboard:  # If there's a previous message
+            request = await mongo.checkstock()
+            template = template
+            if request.get('status') == 200 and template.get('status') == 200:
+                request = await mongo.gettopten()
+
+                if request['status'] == 400:
+                    embed = await discordembed.textembed(request['message'])
+                    await ctx.respond(embed=embed)
+                    return
+                
+                assets = await mongo.getassets()
+                assets = assets['assets']
+                siren = assets.get('sticker_1')
+                arrow = assets.get('sticker_2')
+                money = assets.get('sticker_3')
+                worldlock = assets.get('sticker_4')
+                crown = assets.get('sticker_5')
+                medal = ['🥇', '🥈', '🥉','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅']
+
+                msg = f"Rank--Medal--User--Total Spend\n"
+                for index, text in enumerate(request['data']):
+                    number = index + 1
+                    msg += f'#{number} {medal[index]} <@{text["discordid"]}> {await util_function.format_number(text["totalspend"]["worldlock"])} {worldlock}\n'
+            
+                embed = await discordembed.secondtextembed(msg,'Loyal Customer Leaderboard')
+                
+                # Check if the last message is still valid
+                try:
+                    last_leaderboard = await ctx.fetch_message(self.last_leaderboard.id)
+                except:
+                    last_leaderboard = None
+                
+                if last_leaderboard:
+                    await last_leaderboard.edit(embed=embed)
+                else:
+                    self.last_leaderboard = await ctx.send(embed=embed)
+        else:
+            request = await mongo.checkstock()
+            template = template
+            if request.get('status') == 200 and template.get('status') == 200:
+                request = await mongo.gettopten()
+
+                if request['status'] == 400:
+                    embed = await discordembed.textembed(request['message'])
+                    await ctx.respond(embed=embed)
+                    return
+                
+                assets = await mongo.getassets()
+                assets = assets['assets']
+                siren = assets.get('sticker_1')
+                arrow = assets.get('sticker_2')
+                money = assets.get('sticker_3')
+                worldlock = assets.get('sticker_4')
+                crown = assets.get('sticker_5')
+                medal = ['🥇', '🥈', '🥉','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅','🏅']
+
+                msg = f"Rank--Medal--User--Total Spend\n"
+                for index, text in enumerate(request['data']):
+                    number = index + 1
+                    msg += f'#{number} {medal[index]} <@{text["discordid"]}> {await util_function.format_number(text["totalspend"]["worldlock"])} {worldlock}\n'
+            
+                embed = await discordembed.secondtextembed(msg,'Loyal Customer Leaderboard')
+                self.last_leaderboard = await ctx.send(embed=embed)
+
+    @commands.slash_command(
+    name='startleaderboard',
+    description='Start live leaderboard!',
+    )
+    async def startleaderboard(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            self.ctx = ctx
+            self.runleaderboard.start(ctx, await mongo.getassets())
+            await ctx.respond('Leaderboard deployed!', ephemeral=True)
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
+    name='stopleaderboard',
+    description='Stop leaderboard info!',
+    )
+    async def stopleaderboard(self, ctx):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            self.runleaderboard.cancel()
+            await ctx.respond('Leaderboard stopped!', ephemeral=True)
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
         else:
@@ -643,6 +882,8 @@ class Commands(commands.Cog):
     description='Register or change registered information!',
     )
     async def addrole(self, ctx, discordid: Option(str, 'Target Discord ID!', required=True), role: Option(str, 'New Grow ID!', required=True)):
+        discordid = await util_function.convert_id(str(discordid))
+        role = await util_function.convert_id(str(role))
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:

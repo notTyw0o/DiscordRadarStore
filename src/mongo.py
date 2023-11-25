@@ -1087,7 +1087,7 @@ async def addtotalspend(discordid: str, amount: float):
     data = user.find_one(filter)
     update = {
         "$set": {
-            "totalspend": {'worldlock': float(amount), 'rupiah': data['rupiah']}
+            "totalspend": {'worldlock': data['totalspend']['worldlock'] + float(amount), 'rupiah': data['rupiah']}
         }
     }
     user.update_one(filter, update)
@@ -1110,3 +1110,85 @@ async def gettopten():
         return {'status': 200, 'message': 'Success fetching top ten data!', 'data': arr}
     except:
         return {'status': 400, 'message': 'Error on fetching data, please try /upgrade and try again!'}
+
+async def addmuterole(roleid: str, guildid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'muterole']
+
+    filter = {'database': 'User Muted Role'}
+
+    data = user.find_one(filter)
+
+    if data is None:
+        query = {
+            'database': 'User Muted Role',
+            'guildid': str(guildid),
+            'roleid': str(roleid)
+        }
+
+        user.insert_one(query)
+        return {'status': 200, 'message': 'Success set mute role!'}
+    else:
+        update = {
+            "$set": {
+                "roleid": roleid
+            }
+        }
+        user.update_one(filter, update)
+        return {'status': 200, 'message': 'Success set new mute role!'}
+    
+async def addmuteuser(discordid: str, expired: str, reason: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'muteuser']
+
+    data = user.find_one({'discordid': discordid})
+    if data is not None:
+        return {'status': 400, 'message': 'User already muted!'}
+
+    query = {
+        'database': 'User Muted',
+        'discordid': discordid,
+        'expired': expired,
+        'reason': reason
+    }
+
+    user.insert_one(query)
+    return {'status': 200, 'message': 'Success add muted user!'}
+
+async def removemuteuser(discordid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'muteuser']
+
+    user.find_one_and_delete({'discordid': discordid})
+    return f'Success'
+
+async def getmuterole():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'muterole']
+
+    data = user.find_one({'database': 'User Muted Role'})
+    if data is None:
+        return{'status': 400, 'message': 'Muted role not been set!'}
+    
+    return {'status': 200, 'message': 'Muted role is ready!', 'data': data['roleid'], 'guild': data['guildid']}
+
+async def getmuteuser(discordid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'muterole']
+
+    filter = {'discord': discordid}
+    data = user.find_one(filter)
+    if data is None:
+        return{'status': 400, 'message': 'User does not exist!'}
+    
+    return {'status': 200, 'message': 'User exist!', 'data': data}
+
+async def getmuteuserall():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'muterole']
+
+    data = user.find({})
+    arr = []
+    for datas in data:
+        arr.append(datas)
+    return arr

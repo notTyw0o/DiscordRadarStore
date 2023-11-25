@@ -3,6 +3,7 @@ from discord.ext import commands
 import client_data
 import mongo
 import discordembed
+import discord_function
 
 intents = discord.Intents.all()
 
@@ -22,6 +23,14 @@ else:
 async def on_ready():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=client_data.PRESENCE))
     print(f'Logged in as {bot.user.name}')
+    try:
+        guildid = await mongo.getmuterole()
+        guildid = guildid['guildid']
+        guild = bot.get_guild(guildid)
+        if guild:
+            await discord_function.fetch_mute_timers(guild)
+    except:
+        pass
 
 @bot.event
 async def on_message(message):

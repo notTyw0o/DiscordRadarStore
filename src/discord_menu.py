@@ -16,30 +16,27 @@ class MainView(discord.ui.View):
         max_values = 1,
         options = [
             discord.SelectOption(
-                label="None",
-                description="None"
-            ),
-            discord.SelectOption(
-                label="Register Grow ID",
+                label="📝| Register Grow ID",
                 description="Register your Grow ID!"
             ),
             discord.SelectOption(
-                label="User Information",
+                label="👤| User Information",
                 description="Get your user information!"
             ),
             discord.SelectOption(
-                label="Deposit Information",
+                label="💸| Deposit Information",
                 description="Get deposit information!"
             ),
             discord.SelectOption(
-                label="Order Product",
+                label="🛒| Order Product",
                 description="Order an product!"
             ),
         ]
     )
     async def select_callback(self, select, interaction):
         isActive = await mongo.checkOwner(client_data.SECRET_KEY)
-        selectedvalues = select.values[0]
+        parts = select.values[0].split("|")
+        selectedvalues = parts[1].strip()
         if isActive['status'] == 200:
             if selectedvalues == "None":
                 await interaction.response.send_message('Nothing!', ephemeral=True)
@@ -88,30 +85,27 @@ class MainViewEmail(discord.ui.View):
         max_values = 1,
         options = [
             discord.SelectOption(
-                label="None",
-                description="None"
-            ),
-            discord.SelectOption(
-                label="Register Grow ID",
+                label="📝| Register Grow ID",
                 description="Register your Grow ID!"
             ),
             discord.SelectOption(
-                label="User Information",
+                label="👤| User Information",
                 description="Get your user information!"
             ),
             discord.SelectOption(
-                label="Deposit Information",
+                label="💸| Deposit Information",
                 description="Get deposit information!"
             ),
             discord.SelectOption(
-                label="Order Product",
+                label="🛒| Order Product",
                 description="Order an product!"
             ),
         ]
     )
     async def select_callback(self, select, interaction):
         isActive = await mongo.checkOwner(client_data.SECRET_KEY)
-        selectedvalues = select.values[0]
+        parts = select.values[0].split("|")
+        selectedvalues = parts[1].strip()
         if isActive['status'] == 200:
             if selectedvalues == "None":
                 await interaction.response.send_message('Nothing!', ephemeral=True)

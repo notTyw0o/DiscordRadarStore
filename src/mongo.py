@@ -1174,9 +1174,8 @@ async def getmuterole():
 
 async def getmuteuser(discordid: str):
     db = client[f'user_{client_data.SECRET_KEY}']
-    user = db[f'muterole']
-
-    filter = {'discord': discordid}
+    user = db[f'muteuser']
+    filter = {'discordid': str(discordid)}
     data = user.find_one(filter)
     if data is None:
         return{'status': 400, 'message': 'User does not exist!'}
@@ -1185,7 +1184,7 @@ async def getmuteuser(discordid: str):
 
 async def getmuteuserall():
     db = client[f'user_{client_data.SECRET_KEY}']
-    user = db[f'muterole']
+    user = db[f'muteuser']
 
     data = user.find({})
     arr = []

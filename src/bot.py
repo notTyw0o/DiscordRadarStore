@@ -25,8 +25,9 @@ async def on_ready():
     print(f'Logged in as {bot.user.name}')
     try:
         guildid = await mongo.getmuterole()
-        guildid = guildid['guildid']
-        guild = bot.get_guild(guildid)
+        guildid = guildid['guild']
+        guild = bot.get_guild(int(guildid))
+
         if guild:
             await discord_function.fetch_mute_timers(guild)
     except:

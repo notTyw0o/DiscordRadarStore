@@ -5,6 +5,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import client_data
 import util_function
+from typing import List
 import re
 
 uri = f'mongodb+srv://{os.getenv("MONGO_USER")}:{os.getenv("MONGO_PASSWORD")}@discordbotdatabase.bpx5wpk.mongodb.net/?retryWrites=true&w=majority'
@@ -523,6 +524,31 @@ async def give(discordid: str, type: str, amount: int):
             else:
                 return f'Success add {amount} {type} to <@{discordid}>'
             
+async def givebal(growid: str, type: str, amount: int):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    user = db[f'growid']
+
+    growid = str(growid)
+    queryfilter = {"growid": {"$regex": f"^{growid}$", "$options": "i"}}
+    data =  user.find_one(queryfilter)
+    if data is None:
+        return {'status': 400, 'message': f'User {growid} not registered!', 'data': data}
+    else:
+        if type not in ['worldlock', 'rupiah']:
+            return {'status': 400, 'message': 'Type value must be "worldlock" or "rupiah"!'}
+        else:
+            data[type]['balance'] = data[type]['balance'] + amount
+            update = {
+                "$set": {
+                    type: data[type]
+                }
+            }
+            user.update_one(queryfilter, update)
+            if '-' in str(amount):
+                return {'status': 200, 'message': f'Success remove {str(amount).replace("-", "")} {type} from <@{growid}>', 'data': data}
+            else:
+                return {'status': 200, 'message': f'Success add {amount} {type} to <@{growid}>', 'data': data}
+            
 async def setwebhook(webhookurl: str):
     db = client[f'user_{client_data.SECRET_KEY}']
     webhook = db[f'webhook']
@@ -543,6 +569,37 @@ async def setwebhook(webhookurl: str):
             }
         webhook.update_one({'database': 'User Webhook'}, update)
         return f'Success set new webhook to databases!'
+    
+async def setwebhookid(webhookid: str):
+    db = client[f'user_{client_data.SECRET_KEY}']
+    webhook = db[f'webhookid']
+
+    data = webhook.find_one({'database': 'User Webhook ID'})
+    if data is None:
+        query = {
+            'database': 'User Webhook ID',
+            'webhookid': webhookid
+        }
+        webhook.insert_one(query)
+        return f'Success set webhook to databases!'
+    else:
+        update = {
+                "$set": {
+                    'webhookid': webhookid
+                }
+            }
+        webhook.update_one({'database': 'User Webhook ID'}, update)
+        return f'Success set new webhook to databases!'
+    
+async def getwebhookid():
+    db = client[f'user_{client_data.SECRET_KEY}']
+    webhook = db[f'webhookid']
+
+    data = webhook.find_one({'database': 'User Webhook ID'})
+    if data is None:
+        return {'status': 400, 'message': 'Webhook ID not yet set!'}
+    else:
+        return {'status': 200, 'webhookid': data['webhookid']}
     
 async def setdeposit(world: str, owner: str):
     db = client[f'user_{client_data.SECRET_KEY}']
@@ -736,7 +793,7 @@ async def setpresence(presence: str):
         selectpresence.update_one({'discordtoken': client_data.TOKEN}, update)
         return f'Success change presence, please restart your bot to apply!'
     
-async def addstockbulk(productId: str, productdetails: str):
+async def addstockbulk(productId: str, productdetails: List[str]):
     db = client[f'user_{client_data.SECRET_KEY}']
     product = db[f'product']
     stock = db[f'stock']
@@ -754,12 +811,7 @@ async def addstockbulk(productId: str, productdetails: str):
         return 'Product not existed in the databases!'
     else:
 
-        sets_of_data = productdetails.split(',')
-        array = []
-        for data_set in sets_of_data:
-            dictionary = {data_set}
-            
-            array.append(dictionary)
+        sets_of_data = productdetails
 
         stockQuery = stock.find_one({'productId': productId})
         if stockQuery is None:
@@ -778,7 +830,7 @@ async def addstockbulk(productId: str, productdetails: str):
                 }
             }
             stock.update_one({'productId': productId}, update)
-        return 'Stock successfully added to the databases!'
+        return f'{len(sets_of_data)} Stock successfully added to the databases!'
 
 async def setchannelhistory(channelid: str):
     db = client[f'user_{client_data.SECRET_KEY}']
@@ -1032,7 +1084,7 @@ async def setup():
         {'name': 'deposit', 'isSetup': False, 'command': '/setdeposit', 'filter': {'database': 'User Deposit'}},
         {'name': 'product', 'isSetup': False, 'command': '/setproduct', 'filter': {'database': 'User Product'}},
         {'name': 'states', 'isSetup': False, 'command': '/setorderstate', 'filter': {'database': 'User State'}},
-        {'name': 'webhook', 'isSetup': False, 'command': '/setwebhook', 'filter': {'database': 'User Webhook'}}
+        {'name': 'webhookid', 'isSetup': False, 'command': '/setwebhookid', 'filter': {'database': 'User Webhook ID'}}
     ]
 
     for index, setup in enumerate(setuplist):

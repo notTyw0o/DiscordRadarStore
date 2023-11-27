@@ -310,6 +310,21 @@ class Commands(commands.Cog):
             await ctx.respond(isOwner.get('message'))
 
     @commands.slash_command(
+    name='setwebhookid',
+    description='Set webhook id!',
+    )
+    async def setwebhook(self, ctx, webhookid: Option(str, 'Discord Webhook URL!', required=True)):
+        isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
+        isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
+        if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
+            request = await mongo.setwebhookid(webhookid)
+            await ctx.respond(f'{request}')
+        elif isAuthor.get('status') == 400:
+            await ctx.respond(isAuthor.get('message'))
+        else:
+            await ctx.respond(isOwner.get('message'))
+
+    @commands.slash_command(
     name='setdeposit',
     description='Set deposit info!',
     )

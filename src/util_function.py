@@ -9,6 +9,7 @@ import string
 import os
 import subprocess
 import mongo
+import re
 
 async def isAuthor(received_id: str, owner_id: str):
     adminlist = await mongo.getadmin()
@@ -183,3 +184,33 @@ async def seconds_until_future_time(future_timestamp):
     time_difference = future_time - current_time
     seconds_left = time_difference.total_seconds()
     return max(0, seconds_left)
+
+async def parse_amount_and_type(input_string):
+    parts = input_string.split(maxsplit=1)
+    result = {}
+
+    if len(parts) >= 2:
+        amount = parts[0]
+        _type = parts[1]
+        try:
+            if _type.strip() not in ['Diamond Lock', 'World Lock']:
+                result['status'] = 400
+                result['error'] = "Invalid item type"
+                return result
+            
+            multiplier = 1
+
+            if _type.strip() == 'Diamond Lock':
+                multiplier = 100
+
+            amount = int(amount)  # Convert the amount to an integer
+            result['status'] = 200
+            result['amount'] = amount * multiplier
+        except ValueError:
+            result['status'] = 400
+            result['error'] = "Invalid format for the amount."
+    else:
+        result['status'] = 400
+        result['error'] = "Invalid input format"
+
+    return result

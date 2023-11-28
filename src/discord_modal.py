@@ -66,7 +66,7 @@ class Order(discord.ui.Modal):
                         footer = {'name': interaction.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                     embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(interaction.user.id))
                     files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(interaction.user.id))
-                    file = discord.File(f'/home/Radar/txtfiles/{str(interaction.user.id)}.txt')
+                    file = discord.File(f'/home/ubuntu/txtfiles/{str(interaction.user.id)}.txt')
                     asyncio.create_task(user.send(file=file))
                     asyncio.create_task(user.send(embed=embed))
                     asyncio.create_task(util_function.delete_text_file(str(interaction.user.id)))
@@ -177,7 +177,7 @@ class OrderEmail(discord.ui.Modal):
             msg += f'{messages["Email"]}:{messages["Password"]}\n'
 
         files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(interaction.user.id))
-        file = discord.File(f'/home/Radar/txtfiles/{str(interaction.user.id)}.txt')
+        file = discord.File(f'/home/ubuntu/txtfiles/{str(interaction.user.id)}.txt')
 
         userlogs = {
             'discordid': str(interaction.user.id), 

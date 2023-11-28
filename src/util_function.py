@@ -101,7 +101,7 @@ def expired(date_string):
 async def startbot(secretkey: str):
     check = await mongo.checksecret(secretkey)
     if check['status'] == 200:
-        directory_path = "/home/Radar/Project/DiscordRadarStore/src"
+        directory_path = "/home/ubuntu/Project/DiscordRadarStore/src"
         os.chdir(directory_path)
 
         command = f"pm2 start main.py --interpreter=python3 --name {secretkey} -- {secretkey}"
@@ -130,7 +130,7 @@ async def restartbot(secretkey: str):
         return {'status': 400, 'message': check['message']}
     
 async def write_text_file(text, textname):
-    directory_path = '/home/Radar/txtfiles'  # Replace this with your desired directory path
+    directory_path = '/home/ubuntu/txtfiles'  # Replace this with your desired directory path
     file_name = f'{textname}.txt'
     file_content = text
 
@@ -148,7 +148,7 @@ async def write_text_file(text, textname):
     return file_path
 
 async def delete_text_file(textname):
-    file_path_to_delete = f'/home/Radar/txtfiles/{textname}.txt'  # Replace with the file path you want to delete
+    file_path_to_delete = f'/home/ubuntu/txtfiles/{textname}.txt'  # Replace with the file path you want to delete
 
     try:
         os.remove(file_path_to_delete)

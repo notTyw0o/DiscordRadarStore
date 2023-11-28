@@ -267,7 +267,7 @@ class Commands(commands.Cog):
                     for text in request['data']:
                         msg += text + "\n"
                     files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(ctx.author.id))
-                    file = discord.File(f'/home/Radar/txtfiles/{str(ctx.author.id)}.txt')
+                    file = discord.File(f'/home/ubuntu/txtfiles/{str(ctx.author.id)}.txt')
                     await ctx.author.send(file=file)
                     await util_function.delete_text_file(str(ctx.author.id))
                     await ctx.respond('Check DM' + "'" + 's!')
@@ -1055,7 +1055,7 @@ class Commands(commands.Cog):
                             footer = {'name': ctx.user.name, 'time': await util_function.timenow(), 'avatar': 'https://archive.org/download/discordprofilepictures/discordgrey.png'}
                         embed = await discordembed.orderembed(isOrder['productdata'], assets['assets'], footer, str(ctx.author.id))
                         files = await util_function.write_text_file(f"== YOUR ORDER DETAILS ==\n{msg}", str(ctx.author.id))
-                        file = discord.File(f'/home/Radar/txtfiles/{str(ctx.author.id)}.txt')
+                        file = discord.File(f'/home/ubuntu/txtfiles/{str(ctx.author.id)}.txt')
                         asyncio.create_task(ctx.author.send(file=file))
                         asyncio.create_task(ctx.author.send(embed=embed))
                         asyncio.create_task(util_function.delete_text_file(str(ctx.author.id)))

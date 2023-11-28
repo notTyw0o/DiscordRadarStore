@@ -356,7 +356,8 @@ async def register(discordid: str, growid: str):
             'discordid': discordid,
             'growid': growid,
             'worldlock': {'currency': 'wl', 'balance': 0},
-            'rupiah': {'currency': 'rp', 'balance': 0}
+            'rupiah': {'currency': 'rp', 'balance': 0},
+            'totalspend': {'worldlock': 0, 'rupiah': 0}
         }
         user.insert_one(query)
         return f'Successfully register {growid}!'

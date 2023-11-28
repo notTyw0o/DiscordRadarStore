@@ -99,6 +99,7 @@ async def on_message(message):
             print(webhook['message'])
             return
         if webhook['webhookid'] != str(message.author.id):
+            print('Wrong Webhook ID')
             return
         array = []
         for embed in message.embeds:
@@ -133,7 +134,7 @@ async def on_message(message):
 
         if addbal['status'] == 400:
             owner = bot.get_user(int(client_data.OWNER_ID))
-            await owner.send(embed=await discordembed.secondtextembed(f'{newdonate["growid"]} deposit failed to be processed, amount: {newdonate["amount"]} {assets["sticker_4"]}!'))
+            await owner.send(embed=await discordembed.secondtextembed(f'{newdonate["growid"]} deposit failed to be processed, amount: {newdonate["amount"]} {assets["sticker_4"]}!', 'Deposit Failed'))
             return
         
         user = bot.get_user(int(addbal['data']['discordid']))

@@ -190,7 +190,7 @@ class Commands(commands.Cog):
         isOwner = await mongo.checkOwner(client_data.SECRET_KEY)
         isAuthor = await util_function.isAuthor(ctx.author.id, client_data.OWNER_ID)
         if isOwner.get('status') == 200 and isAuthor.get('status') == 200:
-            request = await mongo.addstockbulk(productid, productdetails)
+            request = await mongo.addstockbulkcmd(productid, productdetails)
             await ctx.respond(f'{request}')
         elif isAuthor.get('status') == 400:
             await ctx.respond(isAuthor.get('message'))
